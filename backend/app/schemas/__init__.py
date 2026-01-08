@@ -16,11 +16,15 @@ from app.schemas.transaction import (
 from app.schemas.budget import (
     BudgetCreate, BudgetUpdate, BudgetResponse, BudgetStatus
 )
+from app.schemas.bill import (
+    BillCreate, BillUpdate, BillResponse, UpcomingBillResponse
+)
 
 __all__ = [
     "UserCreate", "UserLogin", "UserResponse", "Token", "TokenData",
     "CategoryCreate", "CategoryUpdate", "CategoryResponse",
     "WalletCreate", "WalletUpdate", "WalletResponse",
     "TransactionCreate", "TransactionUpdate", "TransactionResponse",
-    "BudgetCreate", "BudgetUpdate", "BudgetResponse", "BudgetStatus"
+    "BudgetCreate", "BudgetUpdate", "BudgetResponse", "BudgetStatus",
+    "BillCreate", "BillUpdate", "BillResponse", "UpcomingBillResponse"
 ]

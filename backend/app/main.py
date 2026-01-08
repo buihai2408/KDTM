@@ -11,7 +11,8 @@ from app.routers import (
     wallets_router,
     transactions_router,
     budgets_router,
-    summary_router
+    summary_router,
+    automation_router
 )
 
 # Create FastAPI application
@@ -30,6 +31,7 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://frontend:3000",
+        "http://n8n:5678",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -43,6 +45,7 @@ app.include_router(wallets_router)
 app.include_router(transactions_router)
 app.include_router(budgets_router)
 app.include_router(summary_router)
+app.include_router(automation_router)
 
 
 @app.get("/", tags=["Health"])
