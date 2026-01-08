@@ -8,11 +8,12 @@ FROM apache/superset:3.1.0
 # Switch to root for installation
 USER root
 
-# Install additional database drivers
+# Install additional database drivers and gevent worker
 RUN pip install --no-cache-dir \
     psycopg2-binary \
     sqlalchemy \
-    requests
+    requests \
+    gevent
 
 # Copy custom configuration
 COPY superset_config.py /app/pythonpath/superset_config.py
