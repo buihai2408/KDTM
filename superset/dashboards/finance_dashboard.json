@@ -1,0 +1,471 @@
+{
+  "dashboard_title": "Personal Finance Dashboard",
+  "description": "Comprehensive financial analytics dashboard for personal finance management",
+  "css": "",
+  "slug": "finance-dashboard",
+  "published": true,
+  "metadata": {
+    "timed_refresh_immune_slices": [],
+    "expanded_slices": {},
+    "refresh_frequency": 0,
+    "default_filters": "{}",
+    "color_scheme": "financeTheme",
+    "label_colors": {
+      "income": "#10b981",
+      "expense": "#ef4444",
+      "Income": "#10b981",
+      "Expense": "#ef4444",
+      "Budget": "#6366f1",
+      "Actual": "#f59e0b"
+    },
+    "cross_filters_enabled": true,
+    "native_filter_configuration": [
+      {
+        "id": "NATIVE_FILTER-user",
+        "name": "User Filter",
+        "filterType": "filter_select",
+        "targets": [
+          {
+            "column": {
+              "name": "user_id"
+            },
+            "datasetId": "v_kpi_summary"
+          }
+        ],
+        "defaultDataMask": {
+          "filterState": {
+            "value": [1]
+          }
+        },
+        "cascadeParentIds": [],
+        "scope": {
+          "rootPath": ["ROOT_ID"],
+          "excluded": []
+        },
+        "controlValues": {
+          "enableEmptyFilter": false,
+          "inverseSelection": false,
+          "multiSelect": false
+        }
+      },
+      {
+        "id": "NATIVE_FILTER-date",
+        "name": "Date Range",
+        "filterType": "filter_time",
+        "targets": [
+          {
+            "column": {
+              "name": "month_start"
+            }
+          }
+        ],
+        "defaultDataMask": {
+          "filterState": {
+            "value": "Last year"
+          }
+        },
+        "cascadeParentIds": [],
+        "scope": {
+          "rootPath": ["ROOT_ID"],
+          "excluded": []
+        }
+      }
+    ]
+  },
+  "charts": [
+    {
+      "name": "Total Income (MTD)",
+      "viz_type": "big_number_total",
+      "description": "Month to date income",
+      "dataset": "v_kpi_summary",
+      "params": {
+        "metric": {
+          "label": "mtd_income",
+          "expressionType": "SIMPLE",
+          "column": {"column_name": "mtd_income"},
+          "aggregate": "SUM"
+        },
+        "subheader": "Month to Date",
+        "y_axis_format": ",.0f",
+        "header_font_size": 0.4,
+        "subheader_font_size": 0.15,
+        "color_picker": {"r": 16, "g": 185, "b": 129, "a": 1}
+      },
+      "position": {"row": 0, "col": 0, "width": 3, "height": 1}
+    },
+    {
+      "name": "Total Expense (MTD)",
+      "viz_type": "big_number_total",
+      "description": "Month to date expense",
+      "dataset": "v_kpi_summary",
+      "params": {
+        "metric": {
+          "label": "mtd_expense",
+          "expressionType": "SIMPLE",
+          "column": {"column_name": "mtd_expense"},
+          "aggregate": "SUM"
+        },
+        "subheader": "Month to Date",
+        "y_axis_format": ",.0f",
+        "header_font_size": 0.4,
+        "subheader_font_size": 0.15,
+        "color_picker": {"r": 239, "g": 68, "b": 68, "a": 1}
+      },
+      "position": {"row": 0, "col": 3, "width": 3, "height": 1}
+    },
+    {
+      "name": "Net Savings (MTD)",
+      "viz_type": "big_number_total",
+      "description": "Month to date savings",
+      "dataset": "v_kpi_summary",
+      "params": {
+        "metric": {
+          "label": "mtd_savings",
+          "expressionType": "SIMPLE",
+          "column": {"column_name": "mtd_savings"},
+          "aggregate": "SUM"
+        },
+        "subheader": "Month to Date",
+        "y_axis_format": ",.0f",
+        "header_font_size": 0.4,
+        "subheader_font_size": 0.15,
+        "color_picker": {"r": 99, "g": 102, "b": 241, "a": 1}
+      },
+      "position": {"row": 0, "col": 6, "width": 3, "height": 1}
+    },
+    {
+      "name": "Total Balance",
+      "viz_type": "big_number_total",
+      "description": "Total wallet balance",
+      "dataset": "v_kpi_summary",
+      "params": {
+        "metric": {
+          "label": "total_balance",
+          "expressionType": "SIMPLE",
+          "column": {"column_name": "total_balance"},
+          "aggregate": "SUM"
+        },
+        "subheader": "All Wallets",
+        "y_axis_format": ",.0f",
+        "header_font_size": 0.4,
+        "subheader_font_size": 0.15,
+        "color_picker": {"r": 139, "g": 92, "b": 246, "a": 1}
+      },
+      "position": {"row": 0, "col": 9, "width": 3, "height": 1}
+    },
+    {
+      "name": "Monthly Cashflow Trend",
+      "viz_type": "echarts_timeseries_line",
+      "description": "Income vs Expense over time",
+      "dataset": "v_monthly_cashflow",
+      "params": {
+        "x_axis": "month_start",
+        "time_grain_sqla": "P1M",
+        "metrics": [
+          {
+            "label": "Income",
+            "expressionType": "SIMPLE",
+            "column": {"column_name": "total_income"},
+            "aggregate": "SUM"
+          },
+          {
+            "label": "Expense",
+            "expressionType": "SIMPLE",
+            "column": {"column_name": "total_expense"},
+            "aggregate": "SUM"
+          },
+          {
+            "label": "Savings",
+            "expressionType": "SIMPLE",
+            "column": {"column_name": "net_savings"},
+            "aggregate": "SUM"
+          }
+        ],
+        "groupby": [],
+        "row_limit": 12,
+        "order_desc": false,
+        "show_legend": true,
+        "legendType": "scroll",
+        "legendOrientation": "top",
+        "rich_tooltip": true,
+        "tooltipTimeFormat": "%b %Y",
+        "y_axis_format": ",.0f",
+        "seriesType": "line",
+        "show_value": false,
+        "stack": false,
+        "area": false,
+        "markerEnabled": true,
+        "markerSize": 6,
+        "zoomable": true
+      },
+      "position": {"row": 1, "col": 0, "width": 8, "height": 2}
+    },
+    {
+      "name": "Expense by Category",
+      "viz_type": "pie",
+      "description": "Expense distribution by category",
+      "dataset": "v_category_breakdown",
+      "params": {
+        "groupby": ["category_name"],
+        "metric": {
+          "label": "total_amount",
+          "expressionType": "SIMPLE",
+          "column": {"column_name": "total_amount"},
+          "aggregate": "SUM"
+        },
+        "adhoc_filters": [
+          {
+            "clause": "WHERE",
+            "comparator": "expense",
+            "expressionType": "SIMPLE",
+            "operator": "==",
+            "subject": "type"
+          }
+        ],
+        "row_limit": 10,
+        "sort_by_metric": true,
+        "color_scheme": "financeTheme",
+        "show_legend": true,
+        "legendType": "scroll",
+        "legendOrientation": "right",
+        "show_labels": true,
+        "labels_outside": true,
+        "label_type": "key_percent",
+        "number_format": ",.0f",
+        "date_format": "smart_date",
+        "outerRadius": 80,
+        "innerRadius": 40,
+        "donut": true
+      },
+      "position": {"row": 1, "col": 8, "width": 4, "height": 2}
+    },
+    {
+      "name": "Budget vs Actual",
+      "viz_type": "echarts_timeseries_bar",
+      "description": "Budget performance by category",
+      "dataset": "v_budget_performance",
+      "params": {
+        "x_axis": "category_name",
+        "metrics": [
+          {
+            "label": "Budget",
+            "expressionType": "SIMPLE",
+            "column": {"column_name": "budget_amount"},
+            "aggregate": "SUM"
+          },
+          {
+            "label": "Actual Spent",
+            "expressionType": "SIMPLE",
+            "column": {"column_name": "actual_spent"},
+            "aggregate": "SUM"
+          }
+        ],
+        "groupby": [],
+        "row_limit": 10,
+        "order_desc": true,
+        "color_scheme": "financeTheme",
+        "show_legend": true,
+        "legendType": "scroll",
+        "legendOrientation": "top",
+        "rich_tooltip": true,
+        "y_axis_format": ",.0f",
+        "orientation": "vertical",
+        "show_value": true,
+        "stack": false,
+        "bar_stacked": false
+      },
+      "position": {"row": 3, "col": 0, "width": 6, "height": 2}
+    },
+    {
+      "name": "Savings Rate Trend",
+      "viz_type": "echarts_timeseries_line",
+      "description": "Monthly savings rate percentage",
+      "dataset": "v_savings_rate",
+      "params": {
+        "x_axis": "month_start",
+        "time_grain_sqla": "P1M",
+        "metrics": [
+          {
+            "label": "Savings Rate %",
+            "expressionType": "SIMPLE",
+            "column": {"column_name": "savings_rate"},
+            "aggregate": "AVG"
+          },
+          {
+            "label": "Rolling 3M Avg",
+            "expressionType": "SIMPLE",
+            "column": {"column_name": "rolling_3m_savings_rate"},
+            "aggregate": "AVG"
+          }
+        ],
+        "groupby": [],
+        "row_limit": 12,
+        "show_legend": true,
+        "rich_tooltip": true,
+        "y_axis_format": ".1f",
+        "y_axis_bounds": [0, 100],
+        "seriesType": "line",
+        "markerEnabled": true,
+        "markerSize": 6,
+        "show_value": false
+      },
+      "position": {"row": 3, "col": 6, "width": 6, "height": 2}
+    },
+    {
+      "name": "Spending by Day of Week",
+      "viz_type": "echarts_timeseries_bar",
+      "description": "Spending patterns by day of week",
+      "dataset": "v_spending_by_day_of_week",
+      "params": {
+        "x_axis": "day_name",
+        "metrics": [
+          {
+            "label": "Total Spending",
+            "expressionType": "SIMPLE",
+            "column": {"column_name": "total_amount"},
+            "aggregate": "SUM"
+          }
+        ],
+        "adhoc_filters": [
+          {
+            "clause": "WHERE",
+            "comparator": "expense",
+            "expressionType": "SIMPLE",
+            "operator": "==",
+            "subject": "type"
+          }
+        ],
+        "groupby": [],
+        "row_limit": 7,
+        "color_scheme": "financeTheme",
+        "show_legend": false,
+        "y_axis_format": ",.0f",
+        "orientation": "vertical",
+        "show_value": true
+      },
+      "position": {"row": 5, "col": 0, "width": 4, "height": 2}
+    },
+    {
+      "name": "Wallet Balances",
+      "viz_type": "pie",
+      "description": "Balance distribution across wallets",
+      "dataset": "v_wallet_analytics",
+      "params": {
+        "groupby": ["wallet_name"],
+        "metric": {
+          "label": "Balance",
+          "expressionType": "SIMPLE",
+          "column": {"column_name": "current_balance"},
+          "aggregate": "SUM"
+        },
+        "row_limit": 10,
+        "sort_by_metric": true,
+        "color_scheme": "financeTheme",
+        "show_legend": true,
+        "show_labels": true,
+        "label_type": "key_value",
+        "number_format": ",.0f",
+        "outerRadius": 80,
+        "innerRadius": 40,
+        "donut": true
+      },
+      "position": {"row": 5, "col": 4, "width": 4, "height": 2}
+    },
+    {
+      "name": "Top Spending Categories",
+      "viz_type": "table",
+      "description": "Ranked spending categories",
+      "dataset": "v_top_categories",
+      "params": {
+        "groupby": ["category_name"],
+        "metrics": [
+          {
+            "label": "Total Amount",
+            "expressionType": "SIMPLE",
+            "column": {"column_name": "total_amount"},
+            "aggregate": "SUM"
+          },
+          {
+            "label": "Transactions",
+            "expressionType": "SIMPLE",
+            "column": {"column_name": "transaction_count"},
+            "aggregate": "SUM"
+          },
+          {
+            "label": "% of Total",
+            "expressionType": "SIMPLE",
+            "column": {"column_name": "percentage_of_type"},
+            "aggregate": "AVG"
+          }
+        ],
+        "adhoc_filters": [
+          {
+            "clause": "WHERE",
+            "comparator": "expense",
+            "expressionType": "SIMPLE",
+            "operator": "==",
+            "subject": "type"
+          }
+        ],
+        "row_limit": 10,
+        "order_desc": true,
+        "table_timestamp_format": "smart_date",
+        "page_length": 10,
+        "include_search": false,
+        "align_pn": true,
+        "color_pn": true
+      },
+      "position": {"row": 5, "col": 8, "width": 4, "height": 2}
+    },
+    {
+      "name": "Weekly Expense Trend",
+      "viz_type": "echarts_timeseries_line",
+      "description": "Weekly spending trends",
+      "dataset": "v_weekly_trends",
+      "params": {
+        "x_axis": "week_start",
+        "time_grain_sqla": "P1W",
+        "metrics": [
+          {
+            "label": "Weekly Expense",
+            "expressionType": "SIMPLE",
+            "column": {"column_name": "total_amount"},
+            "aggregate": "SUM"
+          }
+        ],
+        "adhoc_filters": [
+          {
+            "clause": "WHERE",
+            "comparator": "expense",
+            "expressionType": "SIMPLE",
+            "operator": "==",
+            "subject": "type"
+          }
+        ],
+        "groupby": [],
+        "row_limit": 52,
+        "show_legend": true,
+        "rich_tooltip": true,
+        "y_axis_format": ",.0f",
+        "seriesType": "line",
+        "markerEnabled": true,
+        "area": true,
+        "opacity": 0.3
+      },
+      "position": {"row": 7, "col": 0, "width": 12, "height": 2}
+    }
+  ],
+  "layout": {
+    "DASHBOARD_VERSION_KEY": "v2",
+    "GRID_ID": {
+      "children": [],
+      "id": "GRID_ID",
+      "type": "GRID"
+    },
+    "ROOT_ID": {
+      "children": ["GRID_ID"],
+      "id": "ROOT_ID",
+      "type": "ROOT"
+    }
+  }
+}

@@ -108,9 +108,22 @@ personal-finance-bi/
 │       ├── services/          # API services
 │       └── context/           # React contexts
 │
-└── database/                   # Database scripts
-    ├── init.sql               # Schema + views
-    └── seed.sql               # Demo data
+├── database/                   # Database scripts
+│   ├── init.sql               # Schema + basic views
+│   ├── seed.sql               # Demo data
+│   └── bi_views.sql           # Advanced BI views (Phase 3)
+│
+├── superset/                   # Superset configuration
+│   ├── Dockerfile             # Custom Superset image
+│   ├── Dockerfile.bootstrap   # Bootstrap container
+│   ├── superset_config.py     # Superset configuration
+│   ├── bootstrap_superset.py  # Auto-setup script
+│   └── dashboards/            # Dashboard JSON templates
+│       └── finance_dashboard.json
+│
+└── scripts/                    # Utility scripts
+    ├── init-superset.ps1      # Windows setup script
+    └── init-superset.sh       # Linux/Mac setup script
 ```
 
 ## 🔌 API Endpoints
@@ -158,8 +171,11 @@ personal-finance-bi/
 - `categories` - Transaction categories
 - `transactions` - Income/expense records
 - `budgets` - Monthly budget limits
+- `dim_date` - Date dimension table for BI analysis
 
 ### Analytical Views (for BI)
+
+**Basic Views:**
 - `v_daily_summary` - Daily aggregations
 - `v_monthly_summary` - Monthly aggregations
 - `v_category_breakdown` - Spending by category
@@ -167,6 +183,22 @@ personal-finance-bi/
 - `v_budget_vs_actual` - Budget monitoring
 - `v_wallet_balance` - Wallet summaries
 - `v_recent_transactions` - Recent transactions with details
+
+**Advanced BI Views (Phase 3):**
+- `v_fact_transactions` - Enriched transaction fact table
+- `v_weekly_trends` - Weekly spending trends
+- `v_spending_by_day_of_week` - Day-of-week spending patterns
+- `v_spending_by_hour` - Hour-of-day spending patterns
+- `v_monthly_cashflow` - Monthly cashflow with MoM changes
+- `v_category_growth` - Category spending growth analysis
+- `v_top_categories` - Ranked spending categories
+- `v_budget_performance` - Enhanced budget performance metrics
+- `v_savings_rate` - Savings rate analysis
+- `v_wallet_analytics` - Wallet activity analytics
+- `v_user_financial_health` - User financial health score
+- `v_expense_forecast` - Expense forecasting with moving averages
+- `v_kpi_summary` - Dashboard KPI metrics
+- `v_transaction_comparison` - YoY/MoM transaction comparisons
 
 ## 🔧 Development
 
@@ -201,21 +233,76 @@ docker-compose down -v  # Removes volumes
 docker-compose up --build
 ```
 
-## 📊 Phase 2: Superset Setup
+## 📊 Phase 3: BI Views & Superset Setup
 
-1. Access Superset at http://localhost:8088
-2. Login with admin / admin
-3. Add Database connection:
+### Automatic Setup (Recommended)
+
+Run the initialization script to automatically set up Superset with pre-configured datasets, charts, and dashboards:
+
+**Windows (PowerShell):**
+```powershell
+.\scripts\init-superset.ps1
+```
+
+**Linux/Mac:**
+```bash
+chmod +x scripts/init-superset.sh
+./scripts/init-superset.sh
+```
+
+### Manual Setup
+
+1. Start all services:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. Access Superset at http://localhost:8088
+3. Login with admin / admin
+4. Add Database connection:
+   - Click **Settings** → **Database Connections** → **+ Database**
    - Database: PostgreSQL
-   - Host: postgres
-   - Port: 5432
-   - Database: finance_db
-   - User: superset_readonly
-   - Password: superset_pass
-4. Create datasets from the `v_*` views
-5. Build charts and dashboards
+   - Host: `postgres`
+   - Port: `5432`
+   - Database: `finance_db`
+   - User: `superset_readonly`
+   - Password: `superset_pass`
 
-## ⚡ Phase 3: n8n Setup
+5. Create datasets from the analytical views:
+   - Navigate to **Data** → **Datasets** → **+ Dataset**
+   - Select the Finance Database
+   - Add each `v_*` view as a dataset
+
+6. Build charts and dashboards using the pre-defined JSON templates in `superset/dashboards/`
+
+### Pre-built Dashboard
+
+The **Personal Finance Dashboard** includes:
+- 📊 KPI Cards: MTD Income, Expense, Savings, Balance
+- 📈 Monthly Cashflow Trend (Line Chart)
+- 🥧 Expense by Category (Pie Chart)
+- 📊 Budget vs Actual (Bar Chart)
+- 📉 Savings Rate Trend (Line Chart)
+- 📅 Spending by Day of Week (Bar Chart)
+- 💰 Wallet Balances (Donut Chart)
+- 📋 Top Spending Categories (Table)
+- 📈 Weekly Expense Trend (Area Chart)
+
+### BI Views Available
+
+| View | Description | Use Case |
+|------|-------------|----------|
+| `v_kpi_summary` | Dashboard KPIs | Summary cards |
+| `v_monthly_cashflow` | Monthly trends with MoM | Trend analysis |
+| `v_category_breakdown` | Category spending | Pie charts |
+| `v_budget_performance` | Budget tracking | Progress bars |
+| `v_savings_rate` | Savings analysis | Gauge charts |
+| `v_weekly_trends` | Weekly patterns | Line charts |
+| `v_spending_by_day_of_week` | Day patterns | Heatmaps |
+| `v_expense_forecast` | Spending forecasts | Predictions |
+| `v_user_financial_health` | Health score | Scorecards |
+
+## ⚡ Phase 4: n8n Automation Setup
 
 1. Access n8n at http://localhost:5678
 2. Login with admin / admin
@@ -223,7 +310,7 @@ docker-compose up --build
    - Monthly bill reminders
    - Budget overrun alerts
    - Large expense notifications
-4. Configure SMTP (use Mailhog for testing)
+4. Configure SMTP (use Mailhog for testing at http://localhost:8025)
 
 ## 🤖 Phase 4: Dify Setup
 

@@ -16,6 +16,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+      - ./database/bi_views.sql:/docker-entrypoint-initdb.d/03-bi-views.sql
     ports:
       - "5432:5432"
     networks:
@@ -75,30 +76,71 @@ services:
   # Apache Superset (BI Dashboards)
   # ============================================
   superset:
-    image: apache/superset:latest
+    build:
+      context: ./superset
+      dockerfile: Dockerfile
     container_name: finance_superset
     restart: unless-stopped
     environment:
-      - SUPERSET_SECRET_KEY=${SUPERSET_SECRET_KEY:-superset-secret-key}
+      - SUPERSET_SECRET_KEY=${SUPERSET_SECRET_KEY:-superset-secret-key-change-in-production}
+      - SUPERSET_CONFIG_PATH=/app/pythonpath/superset_config.py
       - ADMIN_USERNAME=admin
       - ADMIN_EMAIL=admin@superset.local
       - ADMIN_PASSWORD=admin
+      - GUEST_TOKEN_SECRET=${GUEST_TOKEN_SECRET:-guest-secret-change-in-production}
+      # SMTP for alerts
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
     ports:
       - "8088:8088"
     volumes:
       - superset_data:/app/superset_home
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py:ro
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - finance_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     command: >
       bash -c "
         superset db upgrade &&
         superset fab create-admin --username admin --firstname Admin --lastname User --email admin@superset.local --password admin || true &&
         superset init &&
-        superset run -h 0.0.0.0 -p 8088 --with-threads --reload
+        gunicorn --bind 0.0.0.0:8088 --workers 4 --worker-class gevent --timeout 120 'superset.app:create_app()'
       "
+
+  # ============================================
+  # Superset Bootstrap (One-time initialization)
+  # ============================================
+  superset-init:
+    build:
+      context: ./superset
+      dockerfile: Dockerfile.bootstrap
+    container_name: finance_superset_init
+    environment:
+      - SUPERSET_URL=http://superset:8088
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=admin
+      - PG_HOST=postgres
+      - PG_PORT=5432
+      - PG_USER=superset_readonly
+      - PG_PASSWORD=superset_pass
+      - PG_DATABASE=finance_db
+    depends_on:
+      superset:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - finance_network
+    restart: "no"
+    command: python /app/bootstrap_superset.py
 
   # ============================================
   # n8n (Automation)

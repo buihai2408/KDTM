@@ -1,0 +1,2 @@
+# Superset Bootstrap Requirements
+requests>=2.28.0
