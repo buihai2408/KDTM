@@ -1,0 +1,19 @@
+# env & secrets
+.env
+
+# docker
+**/node_modules
+**/__pycache__
+**/.venv
+
+# databases & volumes
+postgres-data
+superset_home
+n8n_data
+
+# logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,174 @@
+ROLE & CONTEXT
+
+You are a Senior System Architect & Full-stack Technical Lead.
+Your task is to design and propose a complete technical solution for a Personal Finance Intelligent Management System following Business Intelligence (BI) principles.
+
+This system is an academic project for a Business Intelligence course, so the solution must be:
+- Technically sound
+- Clearly structured
+- Feasible to implement by a small student team
+- Demonstrating BI thinking (data → analysis → visualization → decision support)
+
+
+PROJECT OVERVIEW
+
+Build a Personal Finance Intelligent Management System that allows users to:
+
+- Record and manage personal income & expenses
+- Analyze financial data using BI dashboards
+- Receive automated reminders & alerts
+- Interact with a financial chatbot to query and analyze their own data
+
+The system must combine:
+- Data management
+- Business Intelligence (BI)
+- Automation
+- AI-powered chatbot
+
+
+MANDATORY TOOLS (MUST BE INCLUDED)
+
+The following tools must be integrated and clearly explained in the architecture:
+
+1. Apache Superset
+- Build BI dashboards:
+  - Income vs Expense
+  - Expense by category
+  - Monthly / yearly trends
+  - Budget vs actual spending
+- Connect directly to analytical database or SQL views
+
+2. n8n
+- Automation workflows:
+  - Bill payment reminders (monthly/periodic)
+  - Budget overrun alerts
+  - Event-based email notifications
+- Triggered by:
+  - Schedule (cron)
+  - Database events
+  - Backend API calls
+
+3. Dify
+- Financial chatbot:
+  - Answer questions like:
+    - “How much did I spend this month?”
+    - “Which category has the highest expense?”
+    - “Did I exceed my budget?”
+  - Use LLM + backend APIs
+  - Access user-specific financial data only
+
+
+FUNCTIONAL REQUIREMENTS
+
+1. Core Finance Features
+- User authentication (login / register)
+- Manage wallets / accounts
+- CRUD income & expense transactions
+- Categorize transactions
+- Set monthly budgets per category
+
+2. Business Intelligence Layer
+- ETL or data preparation for BI
+- Analytical SQL views for:
+  - Daily / monthly aggregation
+  - Category-based analysis
+  - Budget comparison
+- BI dashboards on Apache Superset
+
+3. Automation (n8n)
+- Monthly bill reminder workflow
+- Budget threshold monitoring
+- Automatic email notifications
+- Integration with backend & database
+
+4. AI Chatbot (Dify)
+- Natural language query
+- Backend API integration
+- Data-driven answers (avoid hallucination)
+- Simple financial advice based on historical data
+
+
+NON-FUNCTIONAL REQUIREMENTS
+
+- Simple, clean UI (student-friendly)
+- Clear separation of:
+  - Frontend
+  - Backend
+  - BI
+  - Automation
+  - AI
+- Easy local deployment (Docker preferred)
+- Secure data access per user
+
+
+EXPECTED OUTPUT FROM YOU
+
+Please provide ALL of the following:
+
+1. Overall System Architecture
+- High-level architecture description
+- Component interaction flow:
+  - Frontend
+  - Backend API
+  - Database
+  - Apache Superset
+  - n8n
+  - Dify
+
+2. Technology Stack Proposal
+Include:
+- Frontend (framework, UI library)
+- Backend (framework, authentication)
+- Database (OLTP vs OLAP suggestion)
+- BI & analytics layer
+- Automation layer
+- Chatbot & AI layer
+- Optional DevOps tools (Docker, Nginx, etc.)
+
+If you think some technologies are missing or should be improved, propose reasonable additions but keep the system simple and suitable for a university project.
+
+3. Database Design
+- Core tables (users, transactions, categories, budgets, etc.)
+- Analytical views for Superset & Dify
+- Data flow from transactional DB to BI views
+
+4. BI Dashboard Design (Apache Superset)
+- List dashboards & charts
+- Key KPIs
+- Example SQL logic or queries
+
+5. n8n Workflows
+Describe for each workflow:
+- Trigger
+- Processing logic
+- Data source
+- Output (email, notification, etc.)
+
+6. Dify Chatbot Design
+- Conversation flow
+- API calling strategy
+- Example system prompts
+- Data security and user isolation approach
+
+7. Development Roadmap
+- Phase 1: Core system (FE + BE)
+- Phase 2: BI dashboards
+- Phase 3: Automation with n8n
+- Phase 4: Chatbot with Dify
+- Phase 5: Integration, testing, and demo
+
+
+CONSTRAINTS
+
+- Scope limited to personal finance
+- No complex investment features (stocks, crypto, etc.)
+- Focus on Business Intelligence and decision support
+- Suitable for a 4-person student team
+
+
+OUTPUT STYLE
+
+- Use clear sections
+- Use bullet points
+- Be practical, not overly theoretical
+- Think like a technical mentor for students
