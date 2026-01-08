@@ -1,0 +1,234 @@
+{
+  "name": "Monthly Bill Reminder",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Monthly Cron (1st of month at 8AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get current month in YYYY-MM format\nconst now = new Date();\nconst year = now.getFullYear();\nconst month = String(now.getMonth() + 1).padStart(2, '0');\nconst currentMonth = `${year}-${month}`;\n\nreturn [{ json: { month: currentMonth } }];"
+      },
+      "id": "get-current-month",
+      "name": "Get Current Month",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 200]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=http://backend:8000/api/automation/bills/upcoming?month={{ $json.month }}&service_key={{ $env.N8N_SERVICE_KEY }}",
+        "options": {}
+      },
+      "id": "fetch-bills",
+      "name": "Fetch Upcoming Bills",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Group bills by user email\nconst inputData = $input.first().json;\nconst bills = inputData.bills || [];\nconst month = inputData.month;\n\nif (bills.length === 0) {\n  return [];\n}\n\n// Group by user_email\nconst grouped = {};\nfor (const bill of bills) {\n  const email = bill.user_email;\n  if (!grouped[email]) {\n    grouped[email] = {\n      user_email: email,\n      user_name: bill.user_name,\n      month: month,\n      bills: [],\n      total_amount: 0\n    };\n  }\n  grouped[email].bills.push(bill);\n  grouped[email].total_amount += bill.amount;\n}\n\n// Convert to array\nreturn Object.values(grouped).map(g => ({ json: g }));"
+      },
+      "id": "group-by-user",
+      "name": "Group Bills by User",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build HTML email content for each user\nconst data = $input.item.json;\nconst bills = data.bills;\nconst month = data.month;\nconst totalAmount = data.total_amount;\n\n// Format currency\nconst formatCurrency = (amount, currency = 'VND') => {\n  return new Intl.NumberFormat('vi-VN', { \n    style: 'currency', \n    currency: currency \n  }).format(amount);\n};\n\n// Build bills table\nlet billRows = '';\nfor (const bill of bills) {\n  billRows += `\n    <tr>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">${bill.bill_name}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">${bill.category_name}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">${bill.due_date}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">${bill.wallet_name}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;\">\n        ${formatCurrency(bill.amount, bill.currency)}\n      </td>\n    </tr>`;\n}\n\nconst htmlContent = `\n<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; }\n    .content { background: #fff; padding: 30px; border: 1px solid #eee; }\n    .footer { background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; }\n    table { width: 100%; border-collapse: collapse; margin: 20px 0; }\n    th { background: #f8f9fa; padding: 12px; text-align: left; }\n    .total { background: #667eea; color: white; padding: 15px; border-radius: 5px; text-align: center; margin-top: 20px; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1 style=\"margin: 0;\">📋 Monthly Bill Reminder</h1>\n      <p style=\"margin: 10px 0 0 0; opacity: 0.9;\">Period: ${month}</p>\n    </div>\n    <div class=\"content\">\n      <p>Hello <strong>${data.user_name}</strong>,</p>\n      <p>Here are your upcoming bills for <strong>${month}</strong>:</p>\n      \n      <table>\n        <thead>\n          <tr>\n            <th>Bill Name</th>\n            <th>Category</th>\n            <th>Due Date</th>\n            <th>Wallet</th>\n            <th style=\"text-align: right;\">Amount</th>\n          </tr>\n        </thead>\n        <tbody>\n          ${billRows}\n        </tbody>\n      </table>\n      \n      <div class=\"total\">\n        <h2 style=\"margin: 0;\">Total: ${formatCurrency(totalAmount)}</h2>\n      </div>\n      \n      <p style=\"margin-top: 30px;\">Please ensure you have sufficient funds in your wallets to cover these bills.</p>\n    </div>\n    <div class=\"footer\">\n      <p style=\"margin: 0; color: #666;\">Personal Finance BI System</p>\n      <p style=\"margin: 5px 0 0 0; font-size: 12px; color: #999;\">This is an automated reminder email.</p>\n    </div>\n  </div>\n</body>\n</html>\n`;\n\nreturn [{\n  json: {\n    to: data.user_email,\n    subject: `📋 Bill Reminder for ${month} - Total: ${formatCurrency(totalAmount)}`,\n    html: htmlContent,\n    user_name: data.user_name,\n    bill_count: bills.length,\n    total_amount: totalAmount\n  }\n}];"
+      },
+      "id": "build-email",
+      "name": "Build Email Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@finance.app",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "send-email",
+      "name": "Send Email via MailHog",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1440, 200],
+      "credentials": {
+        "smtp": {
+          "id": "mailhog-smtp",
+          "name": "MailHog SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-check-bills",
+              "leftValue": "={{ $json.total_bills }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-bills-exist",
+      "name": "Check Bills Exist",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [720, 400]
+    },
+    {
+      "parameters": {},
+      "id": "no-bills",
+      "name": "No Bills - Skip",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [960, 500]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Current Month",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monthly Cron (1st of month at 8AM)": {
+      "main": [
+        [
+          {
+            "node": "Get Current Month",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Current Month": {
+      "main": [
+        [
+          {
+            "node": "Fetch Upcoming Bills",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Upcoming Bills": {
+      "main": [
+        [
+          {
+            "node": "Check Bills Exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Bills Exist": {
+      "main": [
+        [
+          {
+            "node": "Group Bills by User",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Bills - Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group Bills by User": {
+      "main": [
+        [
+          {
+            "node": "Build Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Email Content": {
+      "main": [
+        [
+          {
+            "node": "Send Email via MailHog",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "tags": [
+    {
+      "id": "automation",
+      "name": "automation"
+    },
+    {
+      "id": "finance",
+      "name": "finance"
+    }
+  ]
+}

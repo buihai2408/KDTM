@@ -121,9 +121,15 @@ personal-finance-bi/
 │   └── dashboards/            # Dashboard JSON templates
 │       └── finance_dashboard.json
 │
-└── scripts/                    # Utility scripts
-    ├── init-superset.ps1      # Windows setup script
-    └── init-superset.sh       # Linux/Mac setup script
+├── scripts/                    # Utility scripts
+│   ├── init-superset.ps1      # Windows setup script
+│   └── init-superset.sh       # Linux/Mac setup script
+│
+└── n8n/                        # n8n automation (Phase 4)
+    ├── README.md              # Workflow documentation
+    └── workflows/
+        ├── monthly_bill_reminder.json
+        └── budget_overrun_alert.json
 ```
 
 ## 🔌 API Endpoints
@@ -163,6 +169,11 @@ personal-finance-bi/
 - `GET /api/summary/monthly` - Monthly trends
 - `GET /api/summary/categories` - Category breakdown
 
+### Automation (Phase 4)
+- `GET /api/automation/bills/upcoming` - Get upcoming bills for a month
+- `GET /api/automation/budget/overruns` - Get budget overruns
+- `GET /api/automation/health` - Automation service health check
+
 ## 🗄️ Database Schema
 
 ### Tables
@@ -171,6 +182,7 @@ personal-finance-bi/
 - `categories` - Transaction categories
 - `transactions` - Income/expense records
 - `budgets` - Monthly budget limits
+- `bills` - Recurring bills tracking (Phase 4)
 - `dim_date` - Date dimension table for BI analysis
 
 ### Analytical Views (for BI)
@@ -304,13 +316,124 @@ The **Personal Finance Dashboard** includes:
 
 ## ⚡ Phase 4: n8n Automation Setup
 
-1. Access n8n at http://localhost:5678
-2. Login with admin / admin
-3. Create workflows for:
-   - Monthly bill reminders
-   - Budget overrun alerts
-   - Large expense notifications
-4. Configure SMTP (use Mailhog for testing at http://localhost:8025)
+### Pre-built Workflows
+
+The system includes 2 automation workflows located in `n8n/workflows/`:
+
+| Workflow | File | Trigger | Description |
+|----------|------|---------|-------------|
+| Monthly Bill Reminder | `monthly_bill_reminder.json` | Cron (1st of month) + Manual | Sends email reminders for upcoming bills |
+| Budget Overrun Alert | `budget_overrun_alert.json` | Cron (Daily 9AM) + Manual | Alerts users when spending exceeds budget |
+
+### Step-by-Step Import Instructions
+
+#### 1. Access n8n
+- URL: http://localhost:5678
+- Login: admin / admin
+
+#### 2. Create Required Credentials
+
+**A) MailHog SMTP Credential:**
+1. Go to **Settings** → **Credentials** → **Add Credential**
+2. Search for **SMTP**
+3. Configure:
+   - **Credential Name**: `MailHog SMTP`
+   - **Host**: `mailhog`
+   - **Port**: `1025`
+   - **SSL/TLS**: OFF
+   - **User**: (leave empty)
+   - **Password**: (leave empty)
+4. Click **Save**
+
+**B) PostgreSQL Credential (for Budget Overrun workflow):**
+1. Go to **Settings** → **Credentials** → **Add Credential**
+2. Search for **Postgres**
+3. Configure:
+   - **Credential Name**: `Finance PostgreSQL`
+   - **Host**: `postgres`
+   - **Port**: `5432`
+   - **Database**: `finance_db`
+   - **User**: `n8n_readonly`
+   - **Password**: `n8n_pass`
+   - **SSL**: OFF
+4. Click **Save**
+
+#### 3. Import Workflows
+
+1. Go to **Workflows** → **Add Workflow** → **Import from File**
+2. Import `n8n/workflows/monthly_bill_reminder.json`
+3. Repeat for `n8n/workflows/budget_overrun_alert.json`
+
+#### 4. Connect Credentials to Nodes
+
+After importing each workflow:
+
+1. Open the workflow
+2. Click on the **Send Email** node
+3. Select the **MailHog SMTP** credential
+4. For Budget Overrun workflow: click on **Query Budget Overruns** node and select **Finance PostgreSQL** credential
+5. Click **Save**
+6. Toggle **Active** to enable the workflow
+
+### Testing the Workflows
+
+#### Test Monthly Bill Reminder:
+1. Open the **Monthly Bill Reminder** workflow
+2. Click **Execute Workflow** (or click the Manual Trigger node)
+3. Check MailHog UI at http://localhost:8025 for sent emails
+
+#### Test Budget Overrun Alert:
+1. First, ensure there are budget overruns in the database:
+   ```sql
+   -- Connect to postgres and add test data if needed
+   -- The seed data should already have some budget overruns for demo@finance.app
+   ```
+2. Open the **Budget Overrun Alert** workflow
+3. Click **Execute Workflow**
+4. Check MailHog UI at http://localhost:8025 for alert emails
+
+### Workflow Details
+
+#### Monthly Bill Reminder
+- **Schedule**: 1st of each month at 8:00 AM
+- **Data Source**: Backend API `/api/automation/bills/upcoming?month=YYYY-MM`
+- **Email Content**:
+  - Bill name
+  - Due date
+  - Amount
+  - Wallet
+  - Category
+  - Total monthly bills
+
+#### Budget Overrun Alert
+- **Schedule**: Daily at 9:00 AM
+- **Data Source**: PostgreSQL view `v_budget_vs_actual`
+- **Email Content**:
+  - Category name
+  - Budget amount
+  - Actual spent
+  - Overrun amount
+  - Usage percentage
+  - Recommendations
+
+### API Endpoints for Automation
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/automation/bills/upcoming` | GET | Get upcoming bills for a month |
+| `/api/automation/budget/overruns` | GET | Get current budget overruns |
+| `/api/automation/health` | GET | Health check |
+
+**Query Parameters:**
+- `service_key`: Required authentication key (from env `N8N_SERVICE_KEY`)
+- `month`: For bills endpoint, format `YYYY-MM`
+- `year`, `month`: For budget endpoint (optional, defaults to current)
+
+### Viewing Sent Emails
+
+MailHog captures all emails sent by n8n:
+- URL: http://localhost:8025
+- All workflow emails appear here for testing
 
 ## 🤖 Phase 4: Dify Setup
 

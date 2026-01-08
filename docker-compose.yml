@@ -17,6 +17,7 @@ services:
       - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
       - ./database/bi_views.sql:/docker-entrypoint-initdb.d/03-bi-views.sql
+      - ./database/04-bills.sql:/docker-entrypoint-initdb.d/04-bills.sql
     ports:
       - "5432:5432"
     networks:
@@ -159,13 +160,31 @@ services:
       - N8N_HOST=localhost
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
+      # PostgreSQL connection for workflows
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-finance_db}
+      - DB_POSTGRESDB_USER=n8n_readonly
+      - DB_POSTGRESDB_PASSWORD=n8n_pass
+      # Backend API service key
+      - N8N_SERVICE_KEY=${N8N_SERVICE_KEY:-n8n-service-key-change-this}
+      # SMTP Configuration (MailHog)
+      - N8N_EMAIL_MODE=smtp
+      - N8N_SMTP_HOST=mailhog
+      - N8N_SMTP_PORT=1025
+      - N8N_SMTP_SSL=false
     ports:
       - "5678:5678"
     volumes:
       - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/home/node/workflows:ro
     depends_on:
       postgres:
         condition: service_healthy
+      backend:
+        condition: service_started
+      mailhog:
+        condition: service_started
     networks:
       - finance_network
 

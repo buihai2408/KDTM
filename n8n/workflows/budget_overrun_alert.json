@@ -1,0 +1,223 @@
+{
+  "name": "Budget Overrun Alert",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily Cron (9AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 100]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    bva.user_id,\n    u.email AS user_email,\n    u.full_name AS user_name,\n    bva.year,\n    bva.month,\n    TO_CHAR(MAKE_DATE(bva.year, bva.month, 1), 'YYYY-MM') AS period,\n    bva.category_id,\n    bva.category_name,\n    bva.category_color,\n    bva.budget_amount,\n    bva.actual_spent,\n    bva.actual_spent - bva.budget_amount AS overrun_amount,\n    bva.usage_percentage,\n    bva.status\nFROM v_budget_vs_actual bva\nJOIN users u ON bva.user_id = u.id\nWHERE bva.year = EXTRACT(YEAR FROM CURRENT_DATE)::INTEGER\n  AND bva.month = EXTRACT(MONTH FROM CURRENT_DATE)::INTEGER\n  AND bva.actual_spent > bva.budget_amount\nORDER BY bva.user_id, bva.actual_spent - bva.budget_amount DESC;",
+        "options": {}
+      },
+      "id": "query-overruns",
+      "name": "Query Budget Overruns",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [480, 200],
+      "credentials": {
+        "postgres": {
+          "id": "finance-postgres",
+          "name": "Finance PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-has-items",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-overruns-exist",
+      "name": "Check Overruns Exist",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [720, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Group overruns by user email\nconst items = $input.all();\n\nif (items.length === 0) {\n  return [];\n}\n\n// Group by user_email\nconst grouped = {};\nfor (const item of items) {\n  const data = item.json;\n  const email = data.user_email;\n  if (!grouped[email]) {\n    grouped[email] = {\n      user_email: email,\n      user_name: data.user_name,\n      period: data.period,\n      overruns: [],\n      total_overrun: 0\n    };\n  }\n  grouped[email].overruns.push({\n    category_name: data.category_name,\n    category_color: data.category_color,\n    budget_amount: parseFloat(data.budget_amount),\n    actual_spent: parseFloat(data.actual_spent),\n    overrun_amount: parseFloat(data.overrun_amount),\n    usage_percentage: parseFloat(data.usage_percentage || 0)\n  });\n  grouped[email].total_overrun += parseFloat(data.overrun_amount);\n}\n\n// Convert to array\nreturn Object.values(grouped).map(g => ({ json: g }));"
+      },
+      "id": "group-by-user",
+      "name": "Group by User",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build HTML email content for budget overrun alert\nconst data = $input.item.json;\nconst overruns = data.overruns;\nconst period = data.period;\nconst totalOverrun = data.total_overrun;\n\n// Format currency\nconst formatCurrency = (amount) => {\n  return new Intl.NumberFormat('vi-VN', { \n    style: 'currency', \n    currency: 'VND' \n  }).format(amount);\n};\n\n// Build overruns table\nlet overrunRows = '';\nfor (const o of overruns) {\n  const progressWidth = Math.min(o.usage_percentage, 150);\n  overrunRows += `\n    <tr>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">\n        <span style=\"display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${o.category_color}; margin-right: 8px;\"></span>\n        ${o.category_name}\n      </td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee; text-align: right;\">${formatCurrency(o.budget_amount)}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee; text-align: right; color: #dc2626; font-weight: bold;\">${formatCurrency(o.actual_spent)}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee; text-align: right; color: #dc2626; font-weight: bold;\">+${formatCurrency(o.overrun_amount)}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">\n        <div style=\"background: #fee2e2; border-radius: 10px; height: 20px; position: relative; overflow: hidden;\">\n          <div style=\"background: #dc2626; height: 100%; width: ${progressWidth}%; border-radius: 10px;\"></div>\n          <span style=\"position: absolute; right: 8px; top: 2px; font-size: 11px; font-weight: bold;\">${o.usage_percentage.toFixed(0)}%</span>\n        </div>\n      </td>\n    </tr>`;\n}\n\nconst htmlContent = `\n<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 700px; margin: 0 auto; padding: 20px; }\n    .header { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; }\n    .content { background: #fff; padding: 30px; border: 1px solid #eee; }\n    .footer { background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; }\n    table { width: 100%; border-collapse: collapse; margin: 20px 0; }\n    th { background: #fef2f2; padding: 12px; text-align: left; color: #dc2626; }\n    .alert-box { background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0; border-radius: 0 5px 5px 0; }\n    .total { background: #dc2626; color: white; padding: 15px; border-radius: 5px; text-align: center; margin-top: 20px; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1 style=\"margin: 0;\">⚠️ Budget Overrun Alert</h1>\n      <p style=\"margin: 10px 0 0 0; opacity: 0.9;\">Period: ${period}</p>\n    </div>\n    <div class=\"content\">\n      <p>Hello <strong>${data.user_name}</strong>,</p>\n      \n      <div class=\"alert-box\">\n        <strong>⚠️ Warning:</strong> You have exceeded your budget in ${overruns.length} categor${overruns.length > 1 ? 'ies' : 'y'} this month.\n      </div>\n      \n      <p>Here are the details of your budget overruns for <strong>${period}</strong>:</p>\n      \n      <table>\n        <thead>\n          <tr>\n            <th>Category</th>\n            <th style=\"text-align: right;\">Budget</th>\n            <th style=\"text-align: right;\">Spent</th>\n            <th style=\"text-align: right;\">Overrun</th>\n            <th>Usage</th>\n          </tr>\n        </thead>\n        <tbody>\n          ${overrunRows}\n        </tbody>\n      </table>\n      \n      <div class=\"total\">\n        <h2 style=\"margin: 0;\">Total Overrun: +${formatCurrency(totalOverrun)}</h2>\n      </div>\n      \n      <p style=\"margin-top: 30px;\"><strong>Recommendations:</strong></p>\n      <ul>\n        <li>Review your spending in the overrun categories</li>\n        <li>Consider adjusting your budget for next month</li>\n        <li>Look for areas where you can cut back</li>\n      </ul>\n    </div>\n    <div class=\"footer\">\n      <p style=\"margin: 0; color: #666;\">Personal Finance BI System</p>\n      <p style=\"margin: 5px 0 0 0; font-size: 12px; color: #999;\">This is an automated alert email.</p>\n    </div>\n  </div>\n</body>\n</html>\n`;\n\nreturn [{\n  json: {\n    to: data.user_email,\n    subject: `⚠️ Budget Alert: ${overruns.length} categor${overruns.length > 1 ? 'ies' : 'y'} over budget for ${period}`,\n    html: htmlContent,\n    user_name: data.user_name,\n    overrun_count: overruns.length,\n    total_overrun: totalOverrun\n  }\n}];"
+      },
+      "id": "build-email",
+      "name": "Build Alert Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "alerts@finance.app",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "send-email",
+      "name": "Send Alert via MailHog",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1440, 200],
+      "credentials": {
+        "smtp": {
+          "id": "mailhog-smtp",
+          "name": "MailHog SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "no-overruns",
+      "name": "No Overruns - Skip",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [960, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Query Budget Overruns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Cron (9AM)": {
+      "main": [
+        [
+          {
+            "node": "Query Budget Overruns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Budget Overruns": {
+      "main": [
+        [
+          {
+            "node": "Check Overruns Exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Overruns Exist": {
+      "main": [
+        [
+          {
+            "node": "Group by User",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Overruns - Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group by User": {
+      "main": [
+        [
+          {
+            "node": "Build Alert Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Alert Email": {
+      "main": [
+        [
+          {
+            "node": "Send Alert via MailHog",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "tags": [
+    {
+      "id": "automation",
+      "name": "automation"
+    },
+    {
+      "id": "finance",
+      "name": "finance"
+    },
+    {
+      "id": "alerts",
+      "name": "alerts"
+    }
+  ]
+}
