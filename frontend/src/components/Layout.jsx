@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   User,
+  BarChart3,
 } from 'lucide-react';
 
 const navItems = [
@@ -20,6 +21,7 @@ const navItems = [
   { path: '/wallets', icon: Wallet, label: 'Ví tiền' },
   { path: '/budgets', icon: PiggyBank, label: 'Ngân sách' },
   { path: '/categories', icon: Tag, label: 'Danh mục' },
+  { path: '/bi-dashboard', icon: BarChart3, label: 'BI Dashboard' },
 ];
 
 export default function Layout() {

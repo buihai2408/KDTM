@@ -67,8 +67,16 @@ CORS_OPTIONS = {
     'supports_credentials': True,
     'allow_headers': ['*'],
     'resources': ['*'],
-    'origins': ['http://localhost:3000', 'http://127.0.0.1:3000']
+    'origins': ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173', 'http://127.0.0.1:5173']
 }
+
+# Allow iframe embedding (remove X-Frame-Options)
+HTTP_HEADERS = {
+    'X-Frame-Options': 'ALLOWALL',
+}
+
+# Enable public dashboards
+PUBLIC_ROLE_LIKE = "Gamma"
 
 # Guest token for embedded analytics
 GUEST_ROLE_NAME = "Gamma"
@@ -77,8 +85,7 @@ GUEST_TOKEN_JWT_ALGO = "HS256"
 GUEST_TOKEN_HEADER_NAME = "X-GuestToken"
 GUEST_TOKEN_JWT_EXP_SECONDS = 3600
 
-# Public role for viewing dashboards
-PUBLIC_ROLE_LIKE = "Gamma"
+# Enable Gamma role for public viewing
 PUBLIC_ROLE_LIKE_GAMMA = True
 
 # ============================================

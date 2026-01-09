@@ -8,6 +8,7 @@ import Transactions from './pages/Transactions';
 import Wallets from './pages/Wallets';
 import Budgets from './pages/Budgets';
 import Categories from './pages/Categories';
+import BIDashboard from './pages/BIDashboard';
 
 // Protected route wrapper
 function ProtectedRoute({ children }) {
@@ -82,6 +83,7 @@ function App() {
         <Route path="wallets" element={<Wallets />} />
         <Route path="budgets" element={<Budgets />} />
         <Route path="categories" element={<Categories />} />
+        <Route path="bi-dashboard" element={<BIDashboard />} />
       </Route>
 
       {/* Catch all */}
