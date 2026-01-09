@@ -435,9 +435,264 @@ MailHog captures all emails sent by n8n:
 - URL: http://localhost:8025
 - All workflow emails appear here for testing
 
-## 🤖 Phase 4: Dify Setup
+## 🤖 Phase 5: AI Chatbot (Dify Cloud Integration)
 
-See Phase 4 documentation for Dify chatbot integration.
+The system includes a Chatbot Tool API that integrates with **Dify Cloud** (online, no self-hosting required).
+
+### Architecture Overview
+
+```
+┌─────────────────┐     HTTPS      ┌─────────────────┐     HTTP      ┌─────────────────┐
+│   Dify Cloud    │ ◄────────────► │  ngrok Tunnel   │ ◄──────────► │  Local Backend  │
+│   (Chat App)    │                │  (Public URL)   │               │  (FastAPI)      │
+└─────────────────┘                └─────────────────┘               └─────────────────┘
+                                                                            │
+                                                                            ▼
+                                                                    ┌─────────────────┐
+                                                                    │   PostgreSQL    │
+                                                                    │  (BI Views)     │
+                                                                    └─────────────────┘
+```
+
+### Chatbot API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/chatbot/health` | GET | Health check, returns available views |
+| `/chatbot/query` | POST | Main query endpoint for Dify |
+| `/chatbot/query/result` | POST | Returns raw data rows |
+| `/chatbot/views` | GET | Lists allowed BI views |
+| `/chatbot/demo-questions` | GET | Demo questions in VN/EN |
+
+### Step 1: Expose Local Backend to Internet
+
+Choose **ONE** method to expose your local backend:
+
+#### Option A: ngrok (Recommended)
+
+1. **Install ngrok:**
+   ```bash
+   # Windows (via Chocolatey)
+   choco install ngrok
+   
+   # Or download from https://ngrok.com/download
+   ```
+
+2. **Create ngrok account and get auth token:**
+   - Go to https://dashboard.ngrok.com/signup
+   - Copy your auth token from dashboard
+
+3. **Configure ngrok:**
+   ```bash
+   ngrok config add-authtoken YOUR_AUTH_TOKEN
+   ```
+
+4. **Start ngrok tunnel:**
+   ```bash
+   # Make sure docker-compose is running first
+   docker-compose up -d
+   
+   # Start ngrok tunnel to backend port
+   ngrok http 8000
+   ```
+
+5. **Copy the public URL:**
+   ```
+   Forwarding: https://abc123.ngrok-free.app -> http://localhost:8000
+   ```
+   
+   Your Dify Tool URL will be: `https://abc123.ngrok-free.app/chatbot/query`
+
+#### Option B: Cloudflare Tunnel
+
+1. **Install cloudflared:**
+   ```bash
+   # Windows
+   winget install cloudflare.cloudflared
+   ```
+
+2. **Start tunnel:**
+   ```bash
+   cloudflared tunnel --url http://localhost:8000
+   ```
+
+### Step 2: Create Dify Cloud Chat App
+
+1. **Go to Dify Cloud:** https://cloud.dify.ai
+
+2. **Create new App:**
+   - Click "Create App" → "Create from Blank"
+   - App Type: **Chatbot**
+   - Name: "Personal Finance Assistant"
+   - Description: "AI assistant for personal finance management"
+
+3. **Configure System Prompt (Vietnamese):**
+
+```
+Bạn là trợ lý tài chính cá nhân thông minh. Bạn giúp người dùng:
+- Xem tổng quan thu chi hàng tháng
+- Phân tích chi tiêu theo danh mục
+- Kiểm tra tình trạng ngân sách
+- Xem số dư ví
+- Tra cứu giao dịch gần đây
+
+Quy tắc:
+1. Luôn trả lời bằng tiếng Việt
+2. Sử dụng emoji để làm câu trả lời sinh động hơn
+3. Khi người dùng hỏi về tài chính, gọi tool "query_finance" với câu hỏi của họ
+4. Nếu không chắc chắn về thời gian, mặc định là tháng hiện tại
+5. Đề xuất các hành động tiếp theo cho người dùng
+6. Với số tiền, luôn format theo VND (ví dụ: 1,000,000 VND)
+
+Khi sử dụng tool:
+- user_id: Lấy từ context hoặc hỏi người dùng
+- question: Chuyển câu hỏi của người dùng sang tool
+- timezone: Asia/Ho_Chi_Minh (hoặc Asia/Bangkok)
+```
+
+### Step 3: Add HTTP Tool to Dify
+
+1. **Go to Tools section** in your Dify app
+
+2. **Add Custom Tool:**
+   - Name: `query_finance`
+   - Description: "Query personal finance data from backend"
+
+3. **Configure HTTP Request:**
+   - Method: `POST`
+   - URL: `https://YOUR-NGROK-URL.ngrok-free.app/chatbot/query`
+   - Headers:
+     ```json
+     {
+       "Content-Type": "application/json"
+     }
+     ```
+   - Query Parameters (optional):
+     ```
+     service_key: dify-service-key
+     ```
+
+4. **Request Body Schema:**
+```json
+{
+  "user_id": {
+    "type": "number",
+    "description": "User ID to query data for",
+    "required": true
+  },
+  "question": {
+    "type": "string", 
+    "description": "User's finance question in Vietnamese or English",
+    "required": true
+  },
+  "timezone": {
+    "type": "string",
+    "description": "User timezone",
+    "default": "Asia/Bangkok"
+  }
+}
+```
+
+5. **Response Schema:**
+```json
+{
+  "answer": "string - Natural language answer",
+  "data": "object - Structured data (optional)",
+  "suggested_actions": "array - Follow-up suggestions"
+}
+```
+
+### Step 4: Test the Integration
+
+1. **Test locally first:**
+   ```bash
+   # Health check
+   curl http://localhost:8000/chatbot/health
+   
+   # Test query
+   curl -X POST http://localhost:8000/chatbot/query \
+     -H "Content-Type: application/json" \
+     -d '{"user_id": 1, "question": "Tổng chi tiêu tháng này", "timezone": "Asia/Bangkok"}'
+   ```
+
+2. **Test via ngrok:**
+   ```bash
+   curl -X POST https://YOUR-NGROK-URL.ngrok-free.app/chatbot/query \
+     -H "Content-Type: application/json" \
+     -d '{"user_id": 1, "question": "Tổng chi tiêu tháng này", "timezone": "Asia/Bangkok"}'
+   ```
+
+3. **Test in Dify Cloud:**
+   - Open your Chat App
+   - Ask: "Tổng chi tiêu tháng này là bao nhiêu?"
+   - Verify the bot calls the tool and returns data
+
+### 12 Demo Questions (Vietnamese)
+
+Test your chatbot with these questions:
+
+| # | Question | Intent |
+|---|----------|--------|
+| 1 | Tổng chi tiêu tháng này là bao nhiêu? | Total expense |
+| 2 | Thu nhập tháng này của tôi? | Total income |
+| 3 | Chi tiêu theo danh mục | Category breakdown |
+| 4 | Kiểm tra ngân sách tháng này | Budget status |
+| 5 | Số dư trong ví là bao nhiêu? | Wallet balance |
+| 6 | Giao dịch gần đây | Recent transactions |
+| 7 | Tôi tiết kiệm được bao nhiêu? | Savings |
+| 8 | So sánh thu chi tháng trước | Last month comparison |
+| 9 | Chi tiêu hôm nay | Daily summary |
+| 10 | Xu hướng chi tiêu hàng tháng | Monthly trend |
+| 11 | Có vượt ngân sách không? | Budget overrun check |
+| 12 | Tổng thu nhập năm nay | Yearly income |
+
+### Security Features
+
+The Chatbot API includes several security measures:
+
+1. **View Allowlist:** Only queries these predefined BI views:
+   - `v_income_vs_expense`
+   - `v_monthly_summary`
+   - `v_category_breakdown`
+   - `v_budget_vs_actual`
+   - `v_wallet_balance`
+   - `v_recent_transactions`
+   - `v_daily_summary`
+
+2. **No Raw SQL:** Users cannot execute arbitrary SQL queries
+
+3. **User ID Filtering:** All queries are filtered by `user_id`
+
+4. **Service Key:** Optional authentication via `service_key` parameter
+
+5. **Predefined Query Templates:** Uses parameterized queries only
+
+### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| ngrok connection refused | Ensure `docker-compose up -d` is running |
+| 401 Unauthorized | Check `service_key` in query params |
+| Empty response | Verify `user_id` has data in database |
+| Dify tool not working | Check ngrok URL is accessible |
+| Vietnamese not displaying | Ensure UTF-8 encoding in requests |
+
+### Environment Variables
+
+Add these to your `.env` file:
+
+```env
+# Chatbot/Dify settings
+DIFY_SERVICE_KEY=dify-service-key  # Change in production!
+```
+
+### API Documentation
+
+Full API documentation available at:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+Look for the **Chatbot** section for all available endpoints.
 
 ## 👥 Team
 

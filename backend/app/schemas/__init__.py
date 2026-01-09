@@ -19,6 +19,10 @@ from app.schemas.budget import (
 from app.schemas.bill import (
     BillCreate, BillUpdate, BillResponse, UpcomingBillResponse
 )
+from app.schemas.chatbot import (
+    ChatbotQueryRequest, ChatbotQueryResponse, 
+    ChatbotHealthResponse, QueryResultResponse
+)
 
 __all__ = [
     "UserCreate", "UserLogin", "UserResponse", "Token", "TokenData",
@@ -26,5 +30,7 @@ __all__ = [
     "WalletCreate", "WalletUpdate", "WalletResponse",
     "TransactionCreate", "TransactionUpdate", "TransactionResponse",
     "BudgetCreate", "BudgetUpdate", "BudgetResponse", "BudgetStatus",
-    "BillCreate", "BillUpdate", "BillResponse", "UpcomingBillResponse"
+    "BillCreate", "BillUpdate", "BillResponse", "UpcomingBillResponse",
+    "ChatbotQueryRequest", "ChatbotQueryResponse", 
+    "ChatbotHealthResponse", "QueryResultResponse"
 ]

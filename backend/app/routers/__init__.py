@@ -8,6 +8,7 @@ from app.routers.transactions import router as transactions_router
 from app.routers.budgets import router as budgets_router
 from app.routers.summary import router as summary_router
 from app.routers.automation import router as automation_router
+from app.routers.chatbot import router as chatbot_router
 
 __all__ = [
     "auth_router",
@@ -16,5 +17,6 @@ __all__ = [
     "transactions_router",
     "budgets_router",
     "summary_router",
-    "automation_router"
+    "automation_router",
+    "chatbot_router"
 ]

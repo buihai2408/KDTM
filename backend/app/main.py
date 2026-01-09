@@ -12,7 +12,8 @@ from app.routers import (
     transactions_router,
     budgets_router,
     summary_router,
-    automation_router
+    automation_router,
+    chatbot_router
 )
 
 # Create FastAPI application
@@ -32,6 +33,10 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://frontend:3000",
         "http://n8n:5678",
+        # Dify Cloud origins
+        "https://cloud.dify.ai",
+        "https://api.dify.ai",
+        "*",  # Allow all origins for chatbot API (secured by service_key)
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -46,6 +51,7 @@ app.include_router(transactions_router)
 app.include_router(budgets_router)
 app.include_router(summary_router)
 app.include_router(automation_router)
+app.include_router(chatbot_router)
 
 
 @app.get("/", tags=["Health"])
