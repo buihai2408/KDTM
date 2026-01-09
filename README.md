@@ -41,8 +41,8 @@ A Personal Finance Intelligent Management System with Business Intelligence capa
 ### 1. Clone repository
 
 ```bash
-git clone https://github.com/ThuanDanch);/personal-finance-bi.git
-cd personal-finance-bi
+git clone https://github.com/buihai2408/KDTM.git
+cd KDTM
 ```
 
 ### 2. Tạo file môi trường / Create environment file
