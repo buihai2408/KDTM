@@ -94,4 +94,12 @@ export const summaryAPI = {
     api.get('/api/summary/categories', { params: { type, month, year } }),
 };
 
+// Chatbot API
+export const chatbotAPI = {
+  query: (userId, question, timezone = 'Asia/Ho_Chi_Minh') =>
+    api.post('/chatbot/query', { user_id: userId, question, timezone }),
+  health: () => api.get('/chatbot/health'),
+  demoQuestions: () => api.get('/chatbot/demo-questions'),
+};
+
 export default api;

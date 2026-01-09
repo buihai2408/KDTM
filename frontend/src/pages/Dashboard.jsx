@@ -59,6 +59,11 @@ function StatCard({ title, value, icon: Icon, trend, trendValue, color }) {
   );
 }
 
+const MONTH_NAMES_VI = [
+  'Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6',
+  'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'
+];
+
 export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [monthlyData, setMonthlyData] = useState([]);
@@ -103,34 +108,34 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-slate-900">Tổng quan</h1>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Total Balance"
+          title="Tổng số dư"
           value={formatCurrency(summary?.total_balance || 0)}
           icon={Wallet}
           color="bg-primary-500"
         />
         <StatCard
-          title="Income This Month"
+          title="Thu nhập tháng này"
           value={formatCurrency(summary?.total_income_this_month || 0)}
           icon={TrendingUp}
           color="bg-green-500"
         />
         <StatCard
-          title="Expenses This Month"
+          title="Chi tiêu tháng này"
           value={formatCurrency(summary?.total_expense_this_month || 0)}
           icon={TrendingDown}
           color="bg-red-500"
         />
         <StatCard
-          title="Net Savings"
+          title="Tiết kiệm"
           value={formatCurrency(summary?.net_savings_this_month || 0)}
           icon={PiggyBank}
           trend={summary?.net_savings_this_month >= 0 ? 'up' : 'down'}
-          trendValue={`${summary?.expense_ratio || 0}% expense ratio`}
+          trendValue={`${summary?.expense_ratio || 0}% tỷ lệ chi tiêu`}
           color="bg-accent-500"
         />
       </div>
@@ -140,7 +145,7 @@ export default function Dashboard() {
         {/* Monthly Trend */}
         <div className="card">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">
-            Income vs Expenses (6 months)
+            Thu nhập & Chi tiêu (6 tháng)
           </h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -149,9 +154,7 @@ export default function Dashboard() {
                 <XAxis
                   dataKey="month"
                   tick={{ fontSize: 12 }}
-                  tickFormatter={(m) =>
-                    new Date(2024, m - 1).toLocaleString('en', { month: 'short' })
-                  }
+                  tickFormatter={(m) => MONTH_NAMES_VI[m - 1]}
                 />
                 <YAxis
                   tick={{ fontSize: 12 }}
@@ -159,12 +162,10 @@ export default function Dashboard() {
                 />
                 <Tooltip
                   formatter={(value) => formatCurrency(value)}
-                  labelFormatter={(m) =>
-                    new Date(2024, m - 1).toLocaleString('en', { month: 'long' })
-                  }
+                  labelFormatter={(m) => `Tháng ${m}`}
                 />
-                <Bar dataKey="total_income" name="Income" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="total_expense" name="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="total_income" name="Thu nhập" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="total_expense" name="Chi tiêu" fill="#ef4444" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -173,7 +174,7 @@ export default function Dashboard() {
         {/* Expense by Category */}
         <div className="card">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">
-            Expenses by Category
+            Chi tiêu theo danh mục
           </h2>
           <div className="h-64 flex items-center">
             {categoryData.length > 0 ? (
@@ -201,7 +202,7 @@ export default function Dashboard() {
               </ResponsiveContainer>
             ) : (
               <p className="text-slate-500 text-center w-full">
-                No expense data this month
+                Chưa có dữ liệu chi tiêu tháng này
               </p>
             )}
             <div className="space-y-2 ml-4">
@@ -225,23 +226,23 @@ export default function Dashboard() {
       {/* Recent Transactions */}
       <div className="card">
         <h2 className="text-lg font-semibold text-slate-900 mb-4">
-          Recent Transactions
+          Giao dịch gần đây
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-200">
                 <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">
-                  Date
+                  Ngày
                 </th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">
-                  Category
+                  Danh mục
                 </th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">
-                  Description
+                  Mô tả
                 </th>
                 <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">
-                  Amount
+                  Số tiền
                 </th>
               </tr>
             </thead>
@@ -249,7 +250,7 @@ export default function Dashboard() {
               {recentTransactions.map((tx) => (
                 <tr key={tx.id} className="border-b border-slate-100 hover:bg-slate-50">
                   <td className="py-3 px-4 text-sm text-slate-600">
-                    {new Date(tx.transaction_date).toLocaleDateString()}
+                    {new Date(tx.transaction_date).toLocaleDateString('vi-VN')}
                   </td>
                   <td className="py-3 px-4">
                     <span
@@ -278,7 +279,7 @@ export default function Dashboard() {
               {recentTransactions.length === 0 && (
                 <tr>
                   <td colSpan={4} className="py-8 text-center text-slate-500">
-                    No transactions yet
+                    Chưa có giao dịch nào
                   </td>
                 </tr>
               )}

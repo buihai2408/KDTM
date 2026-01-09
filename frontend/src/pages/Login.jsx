@@ -20,7 +20,7 @@ export default function Login() {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Login failed. Please try again.');
+      setError(err.response?.data?.detail || 'Đăng nhập thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -33,10 +33,10 @@ export default function Login() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-slate-900 mb-2">
-              💰 FinanceBI
+              💰 Quản lý Tài chính
             </h1>
             <p className="text-slate-600">
-              Personal Finance Intelligent Management
+              Hệ thống quản lý tài chính cá nhân thông minh
             </p>
           </div>
 
@@ -58,14 +58,14 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="input"
-                placeholder="Enter your email"
+                placeholder="Nhập email của bạn"
                 required
               />
             </div>
 
             <div>
               <label htmlFor="password" className="label">
-                Password
+                Mật khẩu
               </label>
               <input
                 id="password"
@@ -73,7 +73,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input"
-                placeholder="Enter your password"
+                placeholder="Nhập mật khẩu"
                 required
               />
             </div>
@@ -86,35 +86,35 @@ export default function Login() {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Signing in...
+                  Đang đăng nhập...
                 </>
               ) : (
-                'Sign In'
+                'Đăng nhập'
               )}
             </button>
           </form>
 
           {/* Footer */}
           <p className="mt-6 text-center text-slate-600">
-            Don't have an account?{' '}
+            Chưa có tài khoản?{' '}
             <Link
               to="/register"
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
-              Register
+              Đăng ký ngay
             </Link>
           </p>
 
           {/* Demo credentials */}
           <div className="mt-6 p-4 bg-slate-50 rounded-lg">
             <p className="text-sm text-slate-600 font-medium mb-2">
-              Demo Account:
+              Tài khoản Demo:
             </p>
             <p className="text-sm text-slate-500">
               Email: <code className="bg-slate-200 px-1 rounded">demo@finance.app</code>
             </p>
             <p className="text-sm text-slate-500">
-              Password: <code className="bg-slate-200 px-1 rounded">123456</code>
+              Mật khẩu: <code className="bg-slate-200 px-1 rounded">123456</code>
             </p>
           </div>
         </div>

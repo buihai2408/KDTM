@@ -103,14 +103,14 @@ export default function Transactions() {
       closeModal();
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to save transaction');
+      setError(err.response?.data?.detail || 'Không thể lưu giao dịch');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this transaction?')) return;
+    if (!confirm('Bạn có chắc chắn muốn xóa giao dịch này?')) return;
 
     try {
       await transactionsAPI.delete(id);
@@ -133,10 +133,10 @@ export default function Transactions() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Transactions</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Giao dịch</h1>
         <button onClick={() => openModal()} className="btn btn-primary flex items-center gap-2">
           <Plus className="w-5 h-5" />
-          Add Transaction
+          Thêm giao dịch
         </button>
       </div>
 
@@ -146,19 +146,19 @@ export default function Transactions() {
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
-                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">Date</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">Category</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">Wallet</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">Description</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">Amount</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">Actions</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">Ngày</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">Danh mục</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">Ví</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">Mô tả</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">Số tiền</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {transactions.map((tx) => (
                 <tr key={tx.id} className="border-t border-slate-100 hover:bg-slate-50">
                   <td className="py-3 px-4 text-sm text-slate-600">
-                    {new Date(tx.transaction_date).toLocaleDateString()}
+                    {new Date(tx.transaction_date).toLocaleDateString('vi-VN')}
                   </td>
                   <td className="py-3 px-4">
                     <span
@@ -200,7 +200,7 @@ export default function Transactions() {
               {transactions.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-500">
-                    No transactions yet. Click "Add Transaction" to create one.
+                    Chưa có giao dịch nào. Nhấn "Thêm giao dịch" để tạo mới.
                   </td>
                 </tr>
               )}
@@ -215,7 +215,7 @@ export default function Transactions() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
             <div className="flex items-center justify-between p-4 border-b border-slate-200">
               <h2 className="text-lg font-semibold">
-                {editingTransaction ? 'Edit Transaction' : 'Add Transaction'}
+                {editingTransaction ? 'Sửa giao dịch' : 'Thêm giao dịch'}
               </h2>
               <button onClick={closeModal} className="p-1 hover:bg-slate-100 rounded">
                 <X className="w-5 h-5" />
@@ -240,7 +240,7 @@ export default function Transactions() {
                       : 'bg-white text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  Expense
+                  Chi tiêu
                 </button>
                 <button
                   type="button"
@@ -253,19 +253,19 @@ export default function Transactions() {
                       : 'bg-white text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  Income
+                  Thu nhập
                 </button>
               </div>
 
               <div>
-                <label className="label">Category</label>
+                <label className="label">Danh mục</label>
                 <select
                   value={formData.category_id}
                   onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
                   className="input"
                   required
                 >
-                  <option value="">Select category</option>
+                  <option value="">Chọn danh mục</option>
                   {filteredCategories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
@@ -275,14 +275,14 @@ export default function Transactions() {
               </div>
 
               <div>
-                <label className="label">Wallet</label>
+                <label className="label">Ví</label>
                 <select
                   value={formData.wallet_id}
                   onChange={(e) => setFormData({ ...formData, wallet_id: e.target.value })}
                   className="input"
                   required
                 >
-                  <option value="">Select wallet</option>
+                  <option value="">Chọn ví</option>
                   {wallets.map((wallet) => (
                     <option key={wallet.id} value={wallet.id}>
                       {wallet.name}
@@ -292,20 +292,20 @@ export default function Transactions() {
               </div>
 
               <div>
-                <label className="label">Amount (VND)</label>
+                <label className="label">Số tiền (VND)</label>
                 <input
                   type="number"
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   className="input"
-                  placeholder="Enter amount"
+                  placeholder="Nhập số tiền"
                   min="1"
                   required
                 />
               </div>
 
               <div>
-                <label className="label">Date</label>
+                <label className="label">Ngày</label>
                 <input
                   type="date"
                   value={formData.transaction_date}
@@ -318,13 +318,13 @@ export default function Transactions() {
               </div>
 
               <div>
-                <label className="label">Description (optional)</label>
+                <label className="label">Mô tả (tùy chọn)</label>
                 <input
                   type="text"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="input"
-                  placeholder="Enter description"
+                  placeholder="Nhập mô tả"
                 />
               </div>
 
@@ -334,7 +334,7 @@ export default function Transactions() {
                   onClick={closeModal}
                   className="flex-1 btn btn-secondary"
                 >
-                  Cancel
+                  Hủy
                 </button>
                 <button
                   type="submit"
@@ -344,10 +344,10 @@ export default function Transactions() {
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving...
+                      Đang lưu...
                     </>
                   ) : (
-                    'Save'
+                    'Lưu'
                   )}
                 </button>
               </div>

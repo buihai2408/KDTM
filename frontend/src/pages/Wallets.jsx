@@ -11,10 +11,10 @@ function formatCurrency(amount) {
 }
 
 const WALLET_ICONS = [
-  { id: 'wallet', icon: Wallet, label: 'Wallet' },
-  { id: 'credit-card', icon: CreditCard, label: 'Card' },
-  { id: 'smartphone', icon: Smartphone, label: 'Mobile' },
-  { id: 'building', icon: Building, label: 'Bank' },
+  { id: 'wallet', icon: Wallet, label: 'Ví tiền' },
+  { id: 'credit-card', icon: CreditCard, label: 'Thẻ' },
+  { id: 'smartphone', icon: Smartphone, label: 'Ví điện tử' },
+  { id: 'building', icon: Building, label: 'Ngân hàng' },
 ];
 
 export default function Wallets() {
@@ -97,21 +97,21 @@ export default function Wallets() {
       closeModal();
       fetchWallets();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to save wallet');
+      setError(err.response?.data?.detail || 'Không thể lưu ví');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this wallet?')) return;
+    if (!confirm('Bạn có chắc chắn muốn xóa ví này?')) return;
 
     try {
       await walletsAPI.delete(id);
       fetchWallets();
     } catch (error) {
       console.error('Failed to delete:', error);
-      alert('Cannot delete wallet with transactions');
+      alert('Không thể xóa ví có giao dịch');
     }
   };
 
@@ -133,16 +133,16 @@ export default function Wallets() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Wallets</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Ví tiền</h1>
         <button onClick={() => openModal()} className="btn btn-primary flex items-center gap-2">
           <Plus className="w-5 h-5" />
-          Add Wallet
+          Thêm ví
         </button>
       </div>
 
       {/* Total Balance Card */}
       <div className="card bg-gradient-to-r from-primary-500 to-primary-600 text-white">
-        <p className="text-primary-100 text-sm mb-1">Total Balance</p>
+        <p className="text-primary-100 text-sm mb-1">Tổng số dư</p>
         <p className="text-3xl font-bold">{formatCurrency(totalBalance)}</p>
       </div>
 
@@ -186,7 +186,7 @@ export default function Wallets() {
 
         {wallets.length === 0 && (
           <div className="col-span-full text-center py-12 text-slate-500">
-            No wallets yet. Click "Add Wallet" to create one.
+            Chưa có ví nào. Nhấn "Thêm ví" để tạo mới.
           </div>
         )}
       </div>
@@ -197,7 +197,7 @@ export default function Wallets() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
             <div className="flex items-center justify-between p-4 border-b border-slate-200">
               <h2 className="text-lg font-semibold">
-                {editingWallet ? 'Edit Wallet' : 'Add Wallet'}
+                {editingWallet ? 'Sửa ví' : 'Thêm ví'}
               </h2>
               <button onClick={closeModal} className="p-1 hover:bg-slate-100 rounded">
                 <X className="w-5 h-5" />
@@ -210,20 +210,20 @@ export default function Wallets() {
               )}
 
               <div>
-                <label className="label">Name</label>
+                <label className="label">Tên ví</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="input"
-                  placeholder="e.g., Cash, Bank Account"
+                  placeholder="VD: Tiền mặt, Tài khoản ngân hàng"
                   required
                 />
               </div>
 
               {!editingWallet && (
                 <div>
-                  <label className="label">Initial Balance (VND)</label>
+                  <label className="label">Số dư ban đầu (VND)</label>
                   <input
                     type="number"
                     value={formData.initial_balance}
@@ -238,7 +238,7 @@ export default function Wallets() {
               )}
 
               <div>
-                <label className="label">Icon</label>
+                <label className="label">Biểu tượng</label>
                 <div className="flex gap-2">
                   {WALLET_ICONS.map(({ id, icon: Icon, label }) => (
                     <button
@@ -260,7 +260,7 @@ export default function Wallets() {
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={closeModal} className="flex-1 btn btn-secondary">
-                  Cancel
+                  Hủy
                 </button>
                 <button
                   type="submit"
@@ -270,10 +270,10 @@ export default function Wallets() {
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving...
+                      Đang lưu...
                     </>
                   ) : (
-                    'Save'
+                    'Lưu'
                   )}
                 </button>
               </div>

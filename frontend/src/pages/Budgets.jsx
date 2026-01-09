@@ -99,14 +99,14 @@ export default function Budgets() {
       closeModal();
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to save budget');
+      setError(err.response?.data?.detail || 'Không thể lưu ngân sách');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this budget?')) return;
+    if (!confirm('Bạn có chắc chắn muốn xóa ngân sách này?')) return;
 
     try {
       await budgetsAPI.delete(id);
@@ -138,6 +138,17 @@ export default function Budgets() {
     }
   };
 
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'exceeded':
+        return 'Vượt ngân sách';
+      case 'warning':
+        return 'Cảnh báo';
+      default:
+        return 'An toàn';
+    }
+  };
+
   const usedCategoryIds = budgetStatus.map((b) => b.category_id);
   const availableCategories = categories.filter(
     (c) => !usedCategoryIds.includes(c.id) || editingBudget?.category_id === c.id
@@ -157,29 +168,29 @@ export default function Budgets() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Budgets</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Ngân sách</h1>
         <button
           onClick={() => openModal()}
           disabled={availableCategories.length === 0}
           className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
         >
           <Plus className="w-5 h-5" />
-          Add Budget
+          Thêm ngân sách
         </button>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="card">
-          <p className="text-sm text-slate-600 mb-1">Total Budget</p>
+          <p className="text-sm text-slate-600 mb-1">Tổng ngân sách</p>
           <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalBudget)}</p>
         </div>
         <div className="card">
-          <p className="text-sm text-slate-600 mb-1">Total Spent</p>
+          <p className="text-sm text-slate-600 mb-1">Đã chi tiêu</p>
           <p className="text-2xl font-bold text-red-600">{formatCurrency(totalSpent)}</p>
         </div>
         <div className="card">
-          <p className="text-sm text-slate-600 mb-1">Remaining</p>
+          <p className="text-sm text-slate-600 mb-1">Còn lại</p>
           <p
             className={`text-2xl font-bold ${
               totalBudget - totalSpent >= 0 ? 'text-green-600' : 'text-red-600'
@@ -200,7 +211,7 @@ export default function Budgets() {
                 <div>
                   <h3 className="font-semibold text-slate-900">{budget.category_name}</h3>
                   <p className="text-sm text-slate-500">
-                    {formatCurrency(budget.actual_spent)} of {formatCurrency(budget.budget_amount)}
+                    {formatCurrency(budget.actual_spent)} / {formatCurrency(budget.budget_amount)}
                   </p>
                 </div>
               </div>
@@ -240,10 +251,10 @@ export default function Budgets() {
             </div>
 
             <div className="flex justify-between mt-2 text-sm text-slate-600">
-              <span>Remaining: {formatCurrency(Math.max(budget.remaining, 0))}</span>
+              <span>Còn lại: {formatCurrency(Math.max(budget.remaining, 0))}</span>
               {budget.remaining < 0 && (
                 <span className="text-red-600">
-                  Over by {formatCurrency(Math.abs(budget.remaining))}
+                  Vượt {formatCurrency(Math.abs(budget.remaining))}
                 </span>
               )}
             </div>
@@ -252,7 +263,7 @@ export default function Budgets() {
 
         {budgetStatus.length === 0 && (
           <div className="text-center py-12 text-slate-500">
-            No budgets set for this month. Click "Add Budget" to create one.
+            Chưa có ngân sách cho tháng này. Nhấn "Thêm ngân sách" để tạo mới.
           </div>
         )}
       </div>
@@ -263,7 +274,7 @@ export default function Budgets() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
             <div className="flex items-center justify-between p-4 border-b border-slate-200">
               <h2 className="text-lg font-semibold">
-                {editingBudget ? 'Edit Budget' : 'Add Budget'}
+                {editingBudget ? 'Sửa ngân sách' : 'Thêm ngân sách'}
               </h2>
               <button onClick={closeModal} className="p-1 hover:bg-slate-100 rounded">
                 <X className="w-5 h-5" />
@@ -277,14 +288,14 @@ export default function Budgets() {
 
               {!editingBudget && (
                 <div>
-                  <label className="label">Category</label>
+                  <label className="label">Danh mục</label>
                   <select
                     value={formData.category_id}
                     onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
                     className="input"
                     required
                   >
-                    <option value="">Select category</option>
+                    <option value="">Chọn danh mục</option>
                     {availableCategories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.name}
@@ -296,7 +307,7 @@ export default function Budgets() {
 
               {editingBudget && (
                 <div>
-                  <label className="label">Category</label>
+                  <label className="label">Danh mục</label>
                   <input
                     type="text"
                     value={editingBudget.category_name}
@@ -307,13 +318,13 @@ export default function Budgets() {
               )}
 
               <div>
-                <label className="label">Budget Amount (VND)</label>
+                <label className="label">Số tiền ngân sách (VND)</label>
                 <input
                   type="number"
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   className="input"
-                  placeholder="Enter budget amount"
+                  placeholder="Nhập số tiền ngân sách"
                   min="1"
                   required
                 />
@@ -321,7 +332,7 @@ export default function Budgets() {
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={closeModal} className="flex-1 btn btn-secondary">
-                  Cancel
+                  Hủy
                 </button>
                 <button
                   type="submit"
@@ -331,10 +342,10 @@ export default function Budgets() {
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving...
+                      Đang lưu...
                     </>
                   ) : (
-                    'Save'
+                    'Lưu'
                   )}
                 </button>
               </div>

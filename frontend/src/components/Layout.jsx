@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Chatbot from './Chatbot';
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -14,11 +15,11 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },
-  { path: '/wallets', icon: Wallet, label: 'Wallets' },
-  { path: '/budgets', icon: PiggyBank, label: 'Budgets' },
-  { path: '/categories', icon: Tag, label: 'Categories' },
+  { path: '/', icon: LayoutDashboard, label: 'Tổng quan' },
+  { path: '/transactions', icon: ArrowLeftRight, label: 'Giao dịch' },
+  { path: '/wallets', icon: Wallet, label: 'Ví tiền' },
+  { path: '/budgets', icon: PiggyBank, label: 'Ngân sách' },
+  { path: '/categories', icon: Tag, label: 'Danh mục' },
 ];
 
 export default function Layout() {
@@ -49,7 +50,7 @@ export default function Layout() {
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200">
-          <h1 className="text-xl font-bold text-primary-600">💰 FinanceBI</h1>
+          <h1 className="text-xl font-bold text-primary-600">💰 Quản lý Tài chính</h1>
           <button
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden p-2 rounded-lg hover:bg-slate-100"
@@ -98,7 +99,7 @@ export default function Layout() {
             className="w-full flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
           >
             <LogOut className="w-5 h-5" />
-            Logout
+            Đăng xuất
           </button>
         </div>
       </aside>
@@ -120,6 +121,9 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Chatbot - Floating component */}
+      <Chatbot />
     </div>
   );
 }

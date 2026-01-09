@@ -80,21 +80,21 @@ export default function Categories() {
       closeModal();
       fetchCategories();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to save category');
+      setError(err.response?.data?.detail || 'Không thể lưu danh mục');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
+    if (!confirm('Bạn có chắc chắn muốn xóa danh mục này?')) return;
 
     try {
       await categoriesAPI.delete(id);
       fetchCategories();
     } catch (error) {
       console.error('Failed to delete:', error);
-      alert('Cannot delete category that is in use');
+      alert('Không thể xóa danh mục đang được sử dụng');
     }
   };
 
@@ -113,10 +113,10 @@ export default function Categories() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Categories</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Danh mục</h1>
         <button onClick={() => openModal()} className="btn btn-primary flex items-center gap-2">
           <Plus className="w-5 h-5" />
-          Add Category
+          Thêm danh mục
         </button>
       </div>
 
@@ -130,7 +130,7 @@ export default function Categories() {
               : 'border-transparent text-slate-600 hover:text-slate-900'
           }`}
         >
-          Expense Categories
+          Danh mục chi tiêu
         </button>
         <button
           onClick={() => setActiveTab('income')}
@@ -140,14 +140,14 @@ export default function Categories() {
               : 'border-transparent text-slate-600 hover:text-slate-900'
           }`}
         >
-          Income Categories
+          Danh mục thu nhập
         </button>
       </div>
 
       {/* System Categories */}
       {systemCategories.length > 0 && (
         <div>
-          <h2 className="text-sm font-medium text-slate-500 mb-3">Default Categories</h2>
+          <h2 className="text-sm font-medium text-slate-500 mb-3">Danh mục mặc định</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {systemCategories.map((cat) => (
               <div
@@ -170,7 +170,7 @@ export default function Categories() {
 
       {/* User Categories */}
       <div>
-        <h2 className="text-sm font-medium text-slate-500 mb-3">Your Categories</h2>
+        <h2 className="text-sm font-medium text-slate-500 mb-3">Danh mục của bạn</h2>
         {userCategories.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {userCategories.map((cat) => (
@@ -207,7 +207,7 @@ export default function Categories() {
           </div>
         ) : (
           <div className="text-center py-8 text-slate-500 bg-slate-50 rounded-lg">
-            No custom categories yet. Click "Add Category" to create one.
+            Chưa có danh mục tùy chỉnh. Nhấn "Thêm danh mục" để tạo mới.
           </div>
         )}
       </div>
@@ -218,7 +218,7 @@ export default function Categories() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
             <div className="flex items-center justify-between p-4 border-b border-slate-200">
               <h2 className="text-lg font-semibold">
-                {editingCategory ? 'Edit Category' : 'Add Category'}
+                {editingCategory ? 'Sửa danh mục' : 'Thêm danh mục'}
               </h2>
               <button onClick={closeModal} className="p-1 hover:bg-slate-100 rounded">
                 <X className="w-5 h-5" />
@@ -231,20 +231,20 @@ export default function Categories() {
               )}
 
               <div>
-                <label className="label">Name</label>
+                <label className="label">Tên danh mục</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="input"
-                  placeholder="Category name"
+                  placeholder="Tên danh mục"
                   required
                 />
               </div>
 
               {!editingCategory && (
                 <div>
-                  <label className="label">Type</label>
+                  <label className="label">Loại</label>
                   <div className="flex rounded-lg overflow-hidden border border-slate-200">
                     <button
                       type="button"
@@ -255,7 +255,7 @@ export default function Categories() {
                           : 'bg-white text-slate-600 hover:bg-slate-50'
                       }`}
                     >
-                      Expense
+                      Chi tiêu
                     </button>
                     <button
                       type="button"
@@ -266,14 +266,14 @@ export default function Categories() {
                           : 'bg-white text-slate-600 hover:bg-slate-50'
                       }`}
                     >
-                      Income
+                      Thu nhập
                     </button>
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="label">Color</label>
+                <label className="label">Màu sắc</label>
                 <div className="flex flex-wrap gap-2">
                   {COLORS.map((color) => (
                     <button
@@ -293,7 +293,7 @@ export default function Categories() {
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={closeModal} className="flex-1 btn btn-secondary">
-                  Cancel
+                  Hủy
                 </button>
                 <button
                   type="submit"
@@ -303,10 +303,10 @@ export default function Categories() {
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving...
+                      Đang lưu...
                     </>
                   ) : (
-                    'Save'
+                    'Lưu'
                   )}
                 </button>
               </div>

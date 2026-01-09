@@ -18,12 +18,12 @@ export default function Register() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Mật khẩu xác nhận không khớp');
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError('Mật khẩu phải có ít nhất 6 ký tự');
       return;
     }
 
@@ -33,7 +33,7 @@ export default function Register() {
       await register(email, password, fullName);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed. Please try again.');
+      setError(err.response?.data?.detail || 'Đăng ký thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -46,10 +46,10 @@ export default function Register() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-slate-900 mb-2">
-              Create Account
+              Tạo tài khoản
             </h1>
             <p className="text-slate-600">
-              Start managing your finances today
+              Bắt đầu quản lý tài chính của bạn ngay hôm nay
             </p>
           </div>
 
@@ -63,7 +63,7 @@ export default function Register() {
 
             <div>
               <label htmlFor="fullName" className="label">
-                Full Name
+                Họ và tên
               </label>
               <input
                 id="fullName"
@@ -71,7 +71,7 @@ export default function Register() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="input"
-                placeholder="Enter your full name"
+                placeholder="Nhập họ và tên"
                 required
               />
             </div>
@@ -86,14 +86,14 @@ export default function Register() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="input"
-                placeholder="Enter your email"
+                placeholder="Nhập email của bạn"
                 required
               />
             </div>
 
             <div>
               <label htmlFor="password" className="label">
-                Password
+                Mật khẩu
               </label>
               <input
                 id="password"
@@ -101,14 +101,14 @@ export default function Register() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input"
-                placeholder="At least 6 characters"
+                placeholder="Ít nhất 6 ký tự"
                 required
               />
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="label">
-                Confirm Password
+                Xác nhận mật khẩu
               </label>
               <input
                 id="confirmPassword"
@@ -116,7 +116,7 @@ export default function Register() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="input"
-                placeholder="Confirm your password"
+                placeholder="Nhập lại mật khẩu"
                 required
               />
             </div>
@@ -129,22 +129,22 @@ export default function Register() {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Creating account...
+                  Đang tạo tài khoản...
                 </>
               ) : (
-                'Create Account'
+                'Đăng ký'
               )}
             </button>
           </form>
 
           {/* Footer */}
           <p className="mt-6 text-center text-slate-600">
-            Already have an account?{' '}
+            Đã có tài khoản?{' '}
             <Link
               to="/login"
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
-              Sign In
+              Đăng nhập
             </Link>
           </p>
         </div>
