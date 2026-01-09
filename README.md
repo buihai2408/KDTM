@@ -1,20 +1,23 @@
-# 💰 Personal Finance BI System
+# 💰 Hệ thống Quản lý Tài chính Cá nhân Thông minh
+# Personal Finance BI System
+
+Hệ thống Quản lý Tài chính Cá nhân Thông minh tích hợp Business Intelligence, được xây dựng như một dự án học thuật cho môn học Hệ thống Kinh doanh Thông minh.
 
 A Personal Finance Intelligent Management System with Business Intelligence capabilities, built as an academic project for a Business Intelligence course.
 
-## 🎯 Features
+## 🎯 Tính năng / Features
 
-- **User Authentication**: Register, login, JWT-based authentication
-- **Transaction Management**: Track income and expenses
-- **Wallet Management**: Multiple wallets with automatic balance updates
-- **Budget Tracking**: Set monthly budgets per category with alerts
-- **Categories**: Default and custom categories for transactions
-- **Dashboard**: Visual overview with charts and KPIs
-- **BI Dashboards**: Apache Superset integration for advanced analytics
-- **Automation**: n8n workflows for alerts and reminders
-- **AI Chatbot**: Dify integration for natural language queries (Phase 4)
+- **Xác thực người dùng**: Đăng ký, đăng nhập, xác thực JWT
+- **Quản lý giao dịch**: Theo dõi thu nhập và chi tiêu
+- **Quản lý ví**: Nhiều ví với cập nhật số dư tự động
+- **Theo dõi ngân sách**: Đặt ngân sách hàng tháng theo danh mục với cảnh báo
+- **Danh mục**: Danh mục mặc định và tùy chỉnh cho giao dịch
+- **Dashboard**: Tổng quan trực quan với biểu đồ và KPI
+- **BI Dashboards**: Tích hợp Apache Superset cho phân tích nâng cao
+- **Tự động hóa**: n8n workflows cho cảnh báo và nhắc nhở
+- **AI Chatbot**: Tích hợp Dify cho truy vấn bằng ngôn ngữ tự nhiên
 
-## 🛠️ Tech Stack
+## 🛠️ Công nghệ / Tech Stack
 
 | Layer | Technology |
 |-------|------------|
@@ -23,59 +26,89 @@ A Personal Finance Intelligent Management System with Business Intelligence capa
 | Database | PostgreSQL 15 |
 | BI | Apache Superset |
 | Automation | n8n |
-| AI Chatbot | Dify |
+| AI Chatbot | Dify Cloud |
 | DevOps | Docker Compose |
 
-## 📋 Prerequisites
+## 📋 Yêu cầu / Prerequisites
 
-- Docker Desktop (Windows/Mac) or Docker Engine + Docker Compose (Linux)
+- Docker Desktop (Windows/Mac) hoặc Docker Engine + Docker Compose (Linux)
 - Git
-- 8GB+ RAM recommended
+- 8GB+ RAM khuyến nghị
+- (Tùy chọn) ngrok account để tích hợp Dify AI
 
-## 🚀 Quick Start
+## 🚀 Hướng dẫn Chạy / Quick Start
 
-### 1. Clone the repository
+### 1. Clone repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/ThuanDanch);/personal-finance-bi.git
 cd personal-finance-bi
 ```
 
-### 2. Create environment file
+### 2. Tạo file môi trường / Create environment file
 
 ```bash
-# Copy the example env file
+# Copy file env mẫu
 cp env.example .env
-
-# Edit .env if needed (default values work for development)
 ```
 
-### 3. Start all services
+**Nội dung file `.env`:**
+```env
+# Database
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres123
+POSTGRES_DB=finance_db
+
+# Backend
+DATABASE_URL=postgresql://postgres:postgres123@postgres:5432/finance_db
+SECRET_KEY=your-super-secret-key-change-this-in-production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+# Service Keys (cho n8n và Dify)
+N8N_SERVICE_KEY=n8n-service-key
+DIFY_SERVICE_KEY=dify-service-key
+GUEST_TOKEN_SECRET=guest-secret-key-change-this
+```
+
+### 3. Khởi động tất cả services / Start all services
 
 ```bash
 docker-compose up --build
 ```
 
-Wait for all services to start (first run may take 5-10 minutes to download images).
+Đợi tất cả services khởi động (lần đầu có thể mất 5-10 phút để tải images).
 
-### 4. Access the application
+### 4. Truy cập ứng dụng / Access the application
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| **Frontend** | http://localhost:3000 | Register or use demo account |
+| **Frontend** | http://localhost:5173 | Đăng ký hoặc dùng tài khoản demo |
 | **Backend API** | http://localhost:8000/docs | - |
 | **Superset** | http://localhost:8088 | admin / admin |
 | **n8n** | http://localhost:5678 | admin / admin |
 | **Mailhog** | http://localhost:8025 | - |
 
-### 5. Demo Account
+### 5. Tài khoản Demo / Demo Account
 
 ```
 Email: demo@finance.app
 Password: 123456
 ```
 
-## 📁 Project Structure
+## 🖥️ Giao diện / Screenshots
+
+### Dashboard
+- Tổng quan thu chi
+- Biểu đồ xu hướng
+- Thống kê theo danh mục
+
+### AI Chatbot
+- Hỏi đáp bằng tiếng Việt
+- Tích hợp Dify AI
+- Gợi ý câu hỏi thông minh
+
+## 📁 Cấu trúc dự án / Project Structure
 
 ```
 personal-finance-bi/
@@ -93,9 +126,19 @@ personal-finance-bi/
 │       ├── models/            # SQLAlchemy models
 │       ├── schemas/           # Pydantic schemas
 │       ├── routers/           # API endpoints
+│       │   ├── auth.py        # Authentication
+│       │   ├── wallets.py     # Wallet management
+│       │   ├── categories.py  # Categories
+│       │   ├── transactions.py# Transactions
+│       │   ├── budgets.py     # Budgets
+│       │   ├── summary.py     # Dashboard summary
+│       │   ├── automation.py  # n8n automation
+│       │   └── chatbot.py     # Dify chatbot API
+│       ├── services/          # Business logic
+│       │   └── chatbot_service.py  # Chatbot service
 │       └── utils/             # Utilities (auth, etc.)
 │
-├── frontend/                   # React frontend
+├── frontend/                   # React frontend (Vietnamese UI)
 │   ├── Dockerfile
 │   ├── package.json
 │   ├── vite.config.js
@@ -104,117 +147,277 @@ personal-finance-bi/
 │       ├── main.jsx           # Entry point
 │       ├── App.jsx            # Routes
 │       ├── components/        # Reusable components
-│       ├── pages/             # Page components
+│       │   ├── Layout.jsx     # Main layout
+│       │   └── Chatbot.jsx    # AI Chatbot component
+│       ├── pages/             # Page components (Vietnamese)
+│       │   ├── Dashboard.jsx  # Tổng quan
+│       │   ├── Transactions.jsx # Giao dịch
+│       │   ├── Wallets.jsx    # Ví tiền
+│       │   ├── Budgets.jsx    # Ngân sách
+│       │   ├── Categories.jsx # Danh mục
+│       │   ├── Login.jsx      # Đăng nhập
+│       │   └── Register.jsx   # Đăng ký
 │       ├── services/          # API services
+│       │   └── api.js         # Backend + Dify API
 │       └── context/           # React contexts
 │
 ├── database/                   # Database scripts
 │   ├── init.sql               # Schema + basic views
 │   ├── seed.sql               # Demo data
-│   └── bi_views.sql           # Advanced BI views (Phase 3)
+│   ├── bi_views.sql           # Advanced BI views
+│   └── 04-bills.sql           # Bills table for automation
 │
 ├── superset/                   # Superset configuration
-│   ├── Dockerfile             # Custom Superset image
-│   ├── Dockerfile.bootstrap   # Bootstrap container
-│   ├── superset_config.py     # Superset configuration
-│   ├── bootstrap_superset.py  # Auto-setup script
-│   └── dashboards/            # Dashboard JSON templates
-│       └── finance_dashboard.json
+│   ├── Dockerfile
+│   ├── superset_config.py
+│   └── dashboards/
 │
-├── scripts/                    # Utility scripts
-│   ├── init-superset.ps1      # Windows setup script
-│   └── init-superset.sh       # Linux/Mac setup script
-│
-└── n8n/                        # n8n automation (Phase 4)
-    ├── README.md              # Workflow documentation
+└── n8n/                        # n8n automation
     └── workflows/
         ├── monthly_bill_reminder.json
         └── budget_overrun_alert.json
 ```
 
+## 🤖 Tích hợp AI Chatbot (Dify)
+
+### Kiến trúc / Architecture
+
+```
+┌─────────────────┐                ┌─────────────────┐
+│   Frontend      │ ──────────────►│   Dify Cloud    │
+│   (React)       │   Dify API     │   (AI Model)    │
+└─────────────────┘                └────────┬────────┘
+                                           │
+                                           │ HTTP Tool
+                                           ▼
+┌─────────────────┐                ┌─────────────────┐
+│   PostgreSQL    │ ◄──────────────│   Backend       │
+│   (Database)    │                │   (FastAPI)     │
+└─────────────────┘                └─────────────────┘
+```
+
+### Cách hoạt động / How it works
+
+1. **Frontend** gửi câu hỏi tiếng Việt đến **Dify Cloud** API
+2. **Dify AI** (Gemini/GPT) xử lý và gọi **HTTP Tool** đến Backend
+3. **Backend** query database và trả về dữ liệu
+4. **Dify AI** format câu trả lời và gửi về Frontend
+
+### Thiết lập Dify Cloud / Setup Dify Cloud
+
+#### Bước 1: Tạo tài khoản Dify
+
+1. Truy cập https://cloud.dify.ai
+2. Đăng ký tài khoản miễn phí
+3. Tạo Workspace mới
+
+#### Bước 2: Cấu hình Model
+
+1. Vào **Settings** → **Model Provider**
+2. Thêm API Key cho một trong các model sau:
+   - **Gemini** (khuyến nghị, miễn phí): https://aistudio.google.com/app/apikey
+   - **Groq** (miễn phí, nhanh): https://console.groq.com/keys
+   - **OpenAI** (trả phí): https://platform.openai.com/api-keys
+
+#### Bước 3: Tạo Chat App
+
+1. Click **Create App** → **Create from Blank**
+2. Chọn **Agent** 
+3. Đặt tên: "Trợ lý Tài chính"
+
+#### Bước 4: Cấu hình System Prompt
+
+```
+Bạn là trợ lý tài chính cá nhân thông minh. Bạn giúp người dùng:
+- Xem tổng quan thu chi hàng tháng
+- Phân tích chi tiêu theo danh mục
+- Kiểm tra tình trạng ngân sách
+- Xem số dư ví
+- Tra cứu giao dịch gần đây
+
+Quy tắc:
+1. Luôn trả lời bằng tiếng Việt
+2. Sử dụng emoji để làm câu trả lời sinh động hơn
+3. Khi người dùng hỏi về tài chính, LUÔN gọi tool "queryFinance" với user_id = 1
+4. Format số tiền theo VND (ví dụ: 1,500,000 VND)
+5. Sau mỗi câu trả lời, đề xuất các câu hỏi tiếp theo
+```
+
+#### Bước 5: Thêm Custom Tool
+
+1. Trong app, vào section **Tools** → **+ Add**
+2. Chọn **Custom Tool**
+3. Nhấn **Import from URL**
+4. Nhập URL: `https://YOUR-NGROK-URL/chatbot/openapi.json`
+
+**Hoặc paste schema thủ công:**
+
+```yaml
+openapi: 3.0.0
+info:
+  title: Finance Chatbot API
+  version: 1.0.0
+servers:
+  - url: https://YOUR-NGROK-URL
+paths:
+  /chatbot/query:
+    post:
+      operationId: queryFinance
+      summary: Query user finance data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  description: User ID (use 1 for demo)
+                question:
+                  type: string
+                  description: Question about finance in Vietnamese
+                timezone:
+                  type: string
+                  default: Asia/Ho_Chi_Minh
+              required:
+                - user_id
+                - question
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer:
+                    type: string
+                  data:
+                    type: object
+```
+
+#### Bước 6: Expose Backend với ngrok
+
+```bash
+# Cài đặt ngrok
+# Windows: choco install ngrok
+# Mac: brew install ngrok
+
+# Đăng nhập ngrok
+ngrok config add-authtoken YOUR_AUTH_TOKEN
+
+# Chạy tunnel
+ngrok http 8000
+```
+
+Copy URL ngrok (vd: `https://abc123.ngrok-free.app`) và cập nhật vào Dify Tool settings.
+
+#### Bước 7: Lấy API Key và cập nhật Frontend
+
+1. Trong Dify, vào **API Access** (menu bên trái)
+2. Copy **API Key** (bắt đầu bằng `app-`)
+3. Cập nhật file `frontend/src/services/api.js`:
+
+```javascript
+const DIFY_CONFIG = {
+  apiKey: 'app-YOUR-DIFY-API-KEY-HERE',
+  apiUrl: 'https://api.dify.ai/v1',
+};
+```
+
+4. Rebuild frontend:
+```bash
+docker-compose up -d --build frontend
+```
+
+### Câu hỏi Demo / Demo Questions
+
+| # | Câu hỏi | Ý định |
+|---|---------|--------|
+| 1 | Tổng chi tiêu tháng này là bao nhiêu? | Tổng chi tiêu |
+| 2 | Thu nhập tháng này của tôi? | Tổng thu nhập |
+| 3 | Chi tiêu theo danh mục | Phân tích danh mục |
+| 4 | Kiểm tra ngân sách tháng này | Tình trạng ngân sách |
+| 5 | Số dư trong ví là bao nhiêu? | Số dư ví |
+| 6 | Giao dịch gần đây | Lịch sử giao dịch |
+
+## ⚡ Tự động hóa n8n / n8n Automation
+
+### Workflows có sẵn / Pre-built Workflows
+
+| Workflow | Trigger | Mô tả |
+|----------|---------|-------|
+| Monthly Bill Reminder | Ngày 1 hàng tháng | Nhắc thanh toán hóa đơn |
+| Budget Overrun Alert | Hàng ngày 9AM | Cảnh báo vượt ngân sách |
+
+### Thiết lập / Setup
+
+1. Truy cập n8n: http://localhost:5678
+2. Login: admin / admin
+3. Import workflows từ `n8n/workflows/`
+4. Tạo credentials:
+   - **MailHog SMTP**: Host=mailhog, Port=1025
+   - **PostgreSQL**: Host=postgres, Port=5432, DB=finance_db, User=n8n_readonly, Pass=n8n_pass
+
+### Xem email test / View test emails
+
+Truy cập MailHog UI: http://localhost:8025
+
+## 📊 BI Dashboards (Superset)
+
+### Truy cập / Access
+
+- URL: http://localhost:8088
+- Login: admin / admin
+
+### Views có sẵn / Available Views
+
+| View | Mô tả | Use Case |
+|------|-------|----------|
+| `v_kpi_summary` | Dashboard KPIs | Summary cards |
+| `v_monthly_cashflow` | Xu hướng hàng tháng | Trend analysis |
+| `v_category_breakdown` | Chi tiêu theo danh mục | Pie charts |
+| `v_budget_vs_actual` | So sánh ngân sách | Progress bars |
+| `v_savings_rate` | Tỷ lệ tiết kiệm | Gauge charts |
+
 ## 🔌 API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login and get token
-- `GET /api/auth/me` - Get current user
+- `POST /api/auth/register` - Đăng ký
+- `POST /api/auth/login` - Đăng nhập
+- `GET /api/auth/me` - Thông tin user
 
 ### Wallets
-- `GET /api/wallets` - List wallets
-- `POST /api/wallets` - Create wallet
-- `PUT /api/wallets/{id}` - Update wallet
-- `DELETE /api/wallets/{id}` - Delete wallet
+- `GET /api/wallets` - Danh sách ví
+- `POST /api/wallets` - Tạo ví
+- `PUT /api/wallets/{id}` - Cập nhật ví
+- `DELETE /api/wallets/{id}` - Xóa ví
 
 ### Categories
-- `GET /api/categories` - List categories
-- `POST /api/categories` - Create category
-- `PUT /api/categories/{id}` - Update category
-- `DELETE /api/categories/{id}` - Delete category
+- `GET /api/categories` - Danh sách danh mục
+- `POST /api/categories` - Tạo danh mục
 
 ### Transactions
-- `GET /api/transactions` - List transactions (with filters)
-- `POST /api/transactions` - Create transaction
-- `PUT /api/transactions/{id}` - Update transaction
-- `DELETE /api/transactions/{id}` - Delete transaction
+- `GET /api/transactions` - Danh sách giao dịch
+- `POST /api/transactions` - Tạo giao dịch
 
 ### Budgets
-- `GET /api/budgets` - List budgets
-- `GET /api/budgets/status` - Get budget status with spending
-- `POST /api/budgets` - Create budget
-- `PUT /api/budgets/{id}` - Update budget
-- `DELETE /api/budgets/{id}` - Delete budget
+- `GET /api/budgets` - Danh sách ngân sách
+- `GET /api/budgets/status` - Tình trạng ngân sách
 
-### Summary
-- `GET /api/summary/dashboard` - Dashboard summary
-- `GET /api/summary/monthly` - Monthly trends
-- `GET /api/summary/categories` - Category breakdown
+### Chatbot
+- `GET /chatbot/health` - Health check
+- `POST /chatbot/query` - Query tài chính
+- `GET /chatbot/views` - Danh sách views
 
-### Automation (Phase 4)
-- `GET /api/automation/bills/upcoming` - Get upcoming bills for a month
-- `GET /api/automation/budget/overruns` - Get budget overruns
-- `GET /api/automation/health` - Automation service health check
+### Automation
+- `GET /api/automation/bills/upcoming` - Hóa đơn sắp tới
+- `GET /api/automation/budget/overruns` - Vượt ngân sách
 
-## 🗄️ Database Schema
+## 🛠️ Development
 
-### Tables
-- `users` - User accounts
-- `wallets` - Money accounts
-- `categories` - Transaction categories
-- `transactions` - Income/expense records
-- `budgets` - Monthly budget limits
-- `bills` - Recurring bills tracking (Phase 4)
-- `dim_date` - Date dimension table for BI analysis
-
-### Analytical Views (for BI)
-
-**Basic Views:**
-- `v_daily_summary` - Daily aggregations
-- `v_monthly_summary` - Monthly aggregations
-- `v_category_breakdown` - Spending by category
-- `v_income_vs_expense` - Income vs expense comparison
-- `v_budget_vs_actual` - Budget monitoring
-- `v_wallet_balance` - Wallet summaries
-- `v_recent_transactions` - Recent transactions with details
-
-**Advanced BI Views (Phase 3):**
-- `v_fact_transactions` - Enriched transaction fact table
-- `v_weekly_trends` - Weekly spending trends
-- `v_spending_by_day_of_week` - Day-of-week spending patterns
-- `v_spending_by_hour` - Hour-of-day spending patterns
-- `v_monthly_cashflow` - Monthly cashflow with MoM changes
-- `v_category_growth` - Category spending growth analysis
-- `v_top_categories` - Ranked spending categories
-- `v_budget_performance` - Enhanced budget performance metrics
-- `v_savings_rate` - Savings rate analysis
-- `v_wallet_analytics` - Wallet activity analytics
-- `v_user_financial_health` - User financial health score
-- `v_expense_forecast` - Expense forecasting with moving averages
-- `v_kpi_summary` - Dashboard KPI metrics
-- `v_transaction_comparison` - YoY/MoM transaction comparisons
-
-## 🔧 Development
-
-### Running locally without Docker
+### Chạy local không Docker / Run locally without Docker
 
 **Backend:**
 ```bash
@@ -232,467 +435,56 @@ npm install
 npm run dev
 ```
 
-### Stopping services
+### Dừng services / Stop services
 
 ```bash
 docker-compose down
 ```
 
-### Reset database
+### Reset database / Reset database
 
 ```bash
-docker-compose down -v  # Removes volumes
+docker-compose down -v  # Xóa volumes
 docker-compose up --build
 ```
 
-## 📊 Phase 3: BI Views & Superset Setup
-
-### Automatic Setup (Recommended)
-
-Run the initialization script to automatically set up Superset with pre-configured datasets, charts, and dashboards:
-
-**Windows (PowerShell):**
-```powershell
-.\scripts\init-superset.ps1
-```
-
-**Linux/Mac:**
-```bash
-chmod +x scripts/init-superset.sh
-./scripts/init-superset.sh
-```
-
-### Manual Setup
-
-1. Start all services:
-   ```bash
-   docker-compose up -d
-   ```
-
-2. Access Superset at http://localhost:8088
-3. Login with admin / admin
-4. Add Database connection:
-   - Click **Settings** → **Database Connections** → **+ Database**
-   - Database: PostgreSQL
-   - Host: `postgres`
-   - Port: `5432`
-   - Database: `finance_db`
-   - User: `superset_readonly`
-   - Password: `superset_pass`
-
-5. Create datasets from the analytical views:
-   - Navigate to **Data** → **Datasets** → **+ Dataset**
-   - Select the Finance Database
-   - Add each `v_*` view as a dataset
-
-6. Build charts and dashboards using the pre-defined JSON templates in `superset/dashboards/`
-
-### Pre-built Dashboard
-
-The **Personal Finance Dashboard** includes:
-- 📊 KPI Cards: MTD Income, Expense, Savings, Balance
-- 📈 Monthly Cashflow Trend (Line Chart)
-- 🥧 Expense by Category (Pie Chart)
-- 📊 Budget vs Actual (Bar Chart)
-- 📉 Savings Rate Trend (Line Chart)
-- 📅 Spending by Day of Week (Bar Chart)
-- 💰 Wallet Balances (Donut Chart)
-- 📋 Top Spending Categories (Table)
-- 📈 Weekly Expense Trend (Area Chart)
-
-### BI Views Available
-
-| View | Description | Use Case |
-|------|-------------|----------|
-| `v_kpi_summary` | Dashboard KPIs | Summary cards |
-| `v_monthly_cashflow` | Monthly trends with MoM | Trend analysis |
-| `v_category_breakdown` | Category spending | Pie charts |
-| `v_budget_performance` | Budget tracking | Progress bars |
-| `v_savings_rate` | Savings analysis | Gauge charts |
-| `v_weekly_trends` | Weekly patterns | Line charts |
-| `v_spending_by_day_of_week` | Day patterns | Heatmaps |
-| `v_expense_forecast` | Spending forecasts | Predictions |
-| `v_user_financial_health` | Health score | Scorecards |
-
-## ⚡ Phase 4: n8n Automation Setup
-
-### Pre-built Workflows
-
-The system includes 2 automation workflows located in `n8n/workflows/`:
-
-| Workflow | File | Trigger | Description |
-|----------|------|---------|-------------|
-| Monthly Bill Reminder | `monthly_bill_reminder.json` | Cron (1st of month) + Manual | Sends email reminders for upcoming bills |
-| Budget Overrun Alert | `budget_overrun_alert.json` | Cron (Daily 9AM) + Manual | Alerts users when spending exceeds budget |
-
-### Step-by-Step Import Instructions
-
-#### 1. Access n8n
-- URL: http://localhost:5678
-- Login: admin / admin
-
-#### 2. Create Required Credentials
-
-**A) MailHog SMTP Credential:**
-1. Go to **Settings** → **Credentials** → **Add Credential**
-2. Search for **SMTP**
-3. Configure:
-   - **Credential Name**: `MailHog SMTP`
-   - **Host**: `mailhog`
-   - **Port**: `1025`
-   - **SSL/TLS**: OFF
-   - **User**: (leave empty)
-   - **Password**: (leave empty)
-4. Click **Save**
-
-**B) PostgreSQL Credential (for Budget Overrun workflow):**
-1. Go to **Settings** → **Credentials** → **Add Credential**
-2. Search for **Postgres**
-3. Configure:
-   - **Credential Name**: `Finance PostgreSQL`
-   - **Host**: `postgres`
-   - **Port**: `5432`
-   - **Database**: `finance_db`
-   - **User**: `n8n_readonly`
-   - **Password**: `n8n_pass`
-   - **SSL**: OFF
-4. Click **Save**
-
-#### 3. Import Workflows
-
-1. Go to **Workflows** → **Add Workflow** → **Import from File**
-2. Import `n8n/workflows/monthly_bill_reminder.json`
-3. Repeat for `n8n/workflows/budget_overrun_alert.json`
-
-#### 4. Connect Credentials to Nodes
-
-After importing each workflow:
-
-1. Open the workflow
-2. Click on the **Send Email** node
-3. Select the **MailHog SMTP** credential
-4. For Budget Overrun workflow: click on **Query Budget Overruns** node and select **Finance PostgreSQL** credential
-5. Click **Save**
-6. Toggle **Active** to enable the workflow
-
-### Testing the Workflows
-
-#### Test Monthly Bill Reminder:
-1. Open the **Monthly Bill Reminder** workflow
-2. Click **Execute Workflow** (or click the Manual Trigger node)
-3. Check MailHog UI at http://localhost:8025 for sent emails
-
-#### Test Budget Overrun Alert:
-1. First, ensure there are budget overruns in the database:
-   ```sql
-   -- Connect to postgres and add test data if needed
-   -- The seed data should already have some budget overruns for demo@finance.app
-   ```
-2. Open the **Budget Overrun Alert** workflow
-3. Click **Execute Workflow**
-4. Check MailHog UI at http://localhost:8025 for alert emails
-
-### Workflow Details
-
-#### Monthly Bill Reminder
-- **Schedule**: 1st of each month at 8:00 AM
-- **Data Source**: Backend API `/api/automation/bills/upcoming?month=YYYY-MM`
-- **Email Content**:
-  - Bill name
-  - Due date
-  - Amount
-  - Wallet
-  - Category
-  - Total monthly bills
-
-#### Budget Overrun Alert
-- **Schedule**: Daily at 9:00 AM
-- **Data Source**: PostgreSQL view `v_budget_vs_actual`
-- **Email Content**:
-  - Category name
-  - Budget amount
-  - Actual spent
-  - Overrun amount
-  - Usage percentage
-  - Recommendations
-
-### API Endpoints for Automation
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/automation/bills/upcoming` | GET | Get upcoming bills for a month |
-| `/api/automation/budget/overruns` | GET | Get current budget overruns |
-| `/api/automation/health` | GET | Health check |
-
-**Query Parameters:**
-- `service_key`: Required authentication key (from env `N8N_SERVICE_KEY`)
-- `month`: For bills endpoint, format `YYYY-MM`
-- `year`, `month`: For budget endpoint (optional, defaults to current)
-
-### Viewing Sent Emails
-
-MailHog captures all emails sent by n8n:
-- URL: http://localhost:8025
-- All workflow emails appear here for testing
-
-## 🤖 Phase 5: AI Chatbot (Dify Cloud Integration)
-
-The system includes a Chatbot Tool API that integrates with **Dify Cloud** (online, no self-hosting required).
-
-### Architecture Overview
-
-```
-┌─────────────────┐     HTTPS      ┌─────────────────┐     HTTP      ┌─────────────────┐
-│   Dify Cloud    │ ◄────────────► │  ngrok Tunnel   │ ◄──────────► │  Local Backend  │
-│   (Chat App)    │                │  (Public URL)   │               │  (FastAPI)      │
-└─────────────────┘                └─────────────────┘               └─────────────────┘
-                                                                            │
-                                                                            ▼
-                                                                    ┌─────────────────┐
-                                                                    │   PostgreSQL    │
-                                                                    │  (BI Views)     │
-                                                                    └─────────────────┘
-```
-
-### Chatbot API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/chatbot/health` | GET | Health check, returns available views |
-| `/chatbot/query` | POST | Main query endpoint for Dify |
-| `/chatbot/query/result` | POST | Returns raw data rows |
-| `/chatbot/views` | GET | Lists allowed BI views |
-| `/chatbot/demo-questions` | GET | Demo questions in VN/EN |
-
-### Step 1: Expose Local Backend to Internet
-
-Choose **ONE** method to expose your local backend:
-
-#### Option A: ngrok (Recommended)
-
-1. **Install ngrok:**
-   ```bash
-   # Windows (via Chocolatey)
-   choco install ngrok
-   
-   # Or download from https://ngrok.com/download
-   ```
-
-2. **Create ngrok account and get auth token:**
-   - Go to https://dashboard.ngrok.com/signup
-   - Copy your auth token from dashboard
-
-3. **Configure ngrok:**
-   ```bash
-   ngrok config add-authtoken YOUR_AUTH_TOKEN
-   ```
-
-4. **Start ngrok tunnel:**
-   ```bash
-   # Make sure docker-compose is running first
-   docker-compose up -d
-   
-   # Start ngrok tunnel to backend port
-   ngrok http 8000
-   ```
-
-5. **Copy the public URL:**
-   ```
-   Forwarding: https://abc123.ngrok-free.app -> http://localhost:8000
-   ```
-   
-   Your Dify Tool URL will be: `https://abc123.ngrok-free.app/chatbot/query`
-
-#### Option B: Cloudflare Tunnel
-
-1. **Install cloudflared:**
-   ```bash
-   # Windows
-   winget install cloudflare.cloudflared
-   ```
-
-2. **Start tunnel:**
-   ```bash
-   cloudflared tunnel --url http://localhost:8000
-   ```
-
-### Step 2: Create Dify Cloud Chat App
-
-1. **Go to Dify Cloud:** https://cloud.dify.ai
-
-2. **Create new App:**
-   - Click "Create App" → "Create from Blank"
-   - App Type: **Chatbot**
-   - Name: "Personal Finance Assistant"
-   - Description: "AI assistant for personal finance management"
-
-3. **Configure System Prompt (Vietnamese):**
-
-```
-Bạn là trợ lý tài chính cá nhân thông minh. Bạn giúp người dùng:
-- Xem tổng quan thu chi hàng tháng
-- Phân tích chi tiêu theo danh mục
-- Kiểm tra tình trạng ngân sách
-- Xem số dư ví
-- Tra cứu giao dịch gần đây
-
-Quy tắc:
-1. Luôn trả lời bằng tiếng Việt
-2. Sử dụng emoji để làm câu trả lời sinh động hơn
-3. Khi người dùng hỏi về tài chính, gọi tool "query_finance" với câu hỏi của họ
-4. Nếu không chắc chắn về thời gian, mặc định là tháng hiện tại
-5. Đề xuất các hành động tiếp theo cho người dùng
-6. Với số tiền, luôn format theo VND (ví dụ: 1,000,000 VND)
-
-Khi sử dụng tool:
-- user_id: Lấy từ context hoặc hỏi người dùng
-- question: Chuyển câu hỏi của người dùng sang tool
-- timezone: Asia/Ho_Chi_Minh (hoặc Asia/Bangkok)
-```
-
-### Step 3: Add HTTP Tool to Dify
-
-1. **Go to Tools section** in your Dify app
-
-2. **Add Custom Tool:**
-   - Name: `query_finance`
-   - Description: "Query personal finance data from backend"
-
-3. **Configure HTTP Request:**
-   - Method: `POST`
-   - URL: `https://YOUR-NGROK-URL.ngrok-free.app/chatbot/query`
-   - Headers:
-     ```json
-     {
-       "Content-Type": "application/json"
-     }
-     ```
-   - Query Parameters (optional):
-     ```
-     service_key: dify-service-key
-     ```
-
-4. **Request Body Schema:**
-```json
-{
-  "user_id": {
-    "type": "number",
-    "description": "User ID to query data for",
-    "required": true
-  },
-  "question": {
-    "type": "string", 
-    "description": "User's finance question in Vietnamese or English",
-    "required": true
-  },
-  "timezone": {
-    "type": "string",
-    "description": "User timezone",
-    "default": "Asia/Bangkok"
-  }
-}
-```
-
-5. **Response Schema:**
-```json
-{
-  "answer": "string - Natural language answer",
-  "data": "object - Structured data (optional)",
-  "suggested_actions": "array - Follow-up suggestions"
-}
-```
-
-### Step 4: Test the Integration
-
-1. **Test locally first:**
-   ```bash
-   # Health check
-   curl http://localhost:8000/chatbot/health
-   
-   # Test query
-   curl -X POST http://localhost:8000/chatbot/query \
-     -H "Content-Type: application/json" \
-     -d '{"user_id": 1, "question": "Tổng chi tiêu tháng này", "timezone": "Asia/Bangkok"}'
-   ```
-
-2. **Test via ngrok:**
-   ```bash
-   curl -X POST https://YOUR-NGROK-URL.ngrok-free.app/chatbot/query \
-     -H "Content-Type: application/json" \
-     -d '{"user_id": 1, "question": "Tổng chi tiêu tháng này", "timezone": "Asia/Bangkok"}'
-   ```
-
-3. **Test in Dify Cloud:**
-   - Open your Chat App
-   - Ask: "Tổng chi tiêu tháng này là bao nhiêu?"
-   - Verify the bot calls the tool and returns data
-
-### 12 Demo Questions (Vietnamese)
-
-Test your chatbot with these questions:
-
-| # | Question | Intent |
-|---|----------|--------|
-| 1 | Tổng chi tiêu tháng này là bao nhiêu? | Total expense |
-| 2 | Thu nhập tháng này của tôi? | Total income |
-| 3 | Chi tiêu theo danh mục | Category breakdown |
-| 4 | Kiểm tra ngân sách tháng này | Budget status |
-| 5 | Số dư trong ví là bao nhiêu? | Wallet balance |
-| 6 | Giao dịch gần đây | Recent transactions |
-| 7 | Tôi tiết kiệm được bao nhiêu? | Savings |
-| 8 | So sánh thu chi tháng trước | Last month comparison |
-| 9 | Chi tiêu hôm nay | Daily summary |
-| 10 | Xu hướng chi tiêu hàng tháng | Monthly trend |
-| 11 | Có vượt ngân sách không? | Budget overrun check |
-| 12 | Tổng thu nhập năm nay | Yearly income |
-
-### Security Features
-
-The Chatbot API includes several security measures:
-
-1. **View Allowlist:** Only queries these predefined BI views:
-   - `v_income_vs_expense`
-   - `v_monthly_summary`
-   - `v_category_breakdown`
-   - `v_budget_vs_actual`
-   - `v_wallet_balance`
-   - `v_recent_transactions`
-   - `v_daily_summary`
-
-2. **No Raw SQL:** Users cannot execute arbitrary SQL queries
-
-3. **User ID Filtering:** All queries are filtered by `user_id`
-
-4. **Service Key:** Optional authentication via `service_key` parameter
-
-5. **Predefined Query Templates:** Uses parameterized queries only
-
-### Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| ngrok connection refused | Ensure `docker-compose up -d` is running |
-| 401 Unauthorized | Check `service_key` in query params |
-| Empty response | Verify `user_id` has data in database |
-| Dify tool not working | Check ngrok URL is accessible |
-| Vietnamese not displaying | Ensure UTF-8 encoding in requests |
-
-### Environment Variables
-
-Add these to your `.env` file:
-
-```env
-# Chatbot/Dify settings
-DIFY_SERVICE_KEY=dify-service-key  # Change in production!
-```
-
-### API Documentation
-
-Full API documentation available at:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
-Look for the **Chatbot** section for all available endpoints.
+## 🐛 Troubleshooting
+
+| Vấn đề | Giải pháp |
+|--------|-----------|
+| Frontend không load | Kiểm tra `docker-compose logs frontend` |
+| Chatbot lỗi "blocking mode" | Đảm bảo dùng streaming mode (đã fix) |
+| n8n không có dữ liệu | Chạy `database/04-bills.sql` |
+| Dify tool không hoạt động | Kiểm tra ngrok URL còn active |
+| Rate limit Gemini | Đợi 1 phút hoặc đổi sang Groq |
+
+## 📝 Changelog
+
+### Phase 5 - AI Chatbot Integration
+- ✅ Tích hợp Dify Cloud API
+- ✅ Chatbot UI trong frontend
+- ✅ Streaming mode cho Agent apps
+- ✅ Giao diện tiếng Việt hoàn chỉnh
+
+### Phase 4 - Automation
+- ✅ n8n workflows
+- ✅ Bill reminder
+- ✅ Budget overrun alerts
+
+### Phase 3 - BI Dashboards
+- ✅ Superset integration
+- ✅ Advanced BI views
+- ✅ Pre-built dashboards
+
+### Phase 2 - Core Features
+- ✅ Transaction management
+- ✅ Wallet & Budget
+- ✅ Dashboard
+
+### Phase 1 - Foundation
+- ✅ Authentication
+- ✅ Database schema
+- ✅ Docker setup
 
 ## 👥 Team
 
@@ -709,4 +501,4 @@ This project is for educational purposes only.
 
 ---
 
-Built with ❤️ for Business Intelligence Course
+Built with ❤️ for Business Intelligence Course - Thủy Lợi University

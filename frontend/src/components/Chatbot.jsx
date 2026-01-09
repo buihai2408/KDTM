@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Loader2, Bot, User, Sparkles } from 'lucide-react';
-import { chatbotAPI } from '../services/api';
+import { MessageCircle, X, Send, Loader2, Bot, Sparkles, Cpu } from 'lucide-react';
+import { difyAPI, chatbotAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const SUGGESTED_QUESTIONS = [
@@ -12,6 +12,9 @@ const SUGGESTED_QUESTIONS = [
   'Giao dịch gần đây',
 ];
 
+// Use Dify AI or fallback to backend
+const USE_DIFY = true;
+
 export default function Chatbot() {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -19,12 +22,13 @@ export default function Chatbot() {
     {
       id: 1,
       type: 'bot',
-      content: `Xin chào ${user?.full_name || 'bạn'}! 👋\n\nTôi là trợ lý tài chính AI của bạn. Tôi có thể giúp bạn:\n\n• Xem tổng quan thu chi\n• Phân tích chi tiêu theo danh mục\n• Kiểm tra ngân sách\n• Tra cứu số dư ví\n• Xem giao dịch gần đây\n\nHãy hỏi tôi bất cứ điều gì về tài chính của bạn!`,
+      content: `Xin chào ${user?.full_name || 'bạn'}! 👋\n\nTôi là trợ lý tài chính AI của bạn, được hỗ trợ bởi **Dify AI**. Tôi có thể giúp bạn:\n\n• Xem tổng quan thu chi\n• Phân tích chi tiêu theo danh mục\n• Kiểm tra ngân sách\n• Tra cứu số dư ví\n• Xem giao dịch gần đây\n\nHãy hỏi tôi bất cứ điều gì về tài chính của bạn!`,
       timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [conversationId, setConversationId] = useState('');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -58,22 +62,44 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
-      const response = await chatbotAPI.query(user.id, question);
-      const botMessage = {
-        id: Date.now() + 1,
-        type: 'bot',
-        content: response.data.answer,
-        data: response.data.data,
-        suggestedActions: response.data.suggested_actions,
-        timestamp: new Date(),
-      };
+      let botMessage;
+
+      if (USE_DIFY) {
+        // Use Dify AI API (streaming mode for Agent apps)
+        const response = await difyAPI.chat(question, user.id, conversationId);
+        
+        // Save conversation ID for context
+        if (response.conversation_id) {
+          setConversationId(response.conversation_id);
+        }
+
+        botMessage = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: response.answer || 'Không có phản hồi từ AI',
+          isDify: true,
+          timestamp: new Date(),
+        };
+      } else {
+        // Fallback to backend API
+        const response = await chatbotAPI.query(user.id, question);
+        botMessage = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: response.data.answer,
+          data: response.data.data,
+          suggestedActions: response.data.suggested_actions,
+          timestamp: new Date(),
+        };
+      }
+
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error('Chatbot error:', error);
       const errorMessage = {
         id: Date.now() + 1,
         type: 'bot',
-        content: '❌ Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.',
+        content: `❌ Xin lỗi, đã có lỗi xảy ra: ${error.message}\n\nVui lòng thử lại sau.`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -135,8 +161,8 @@ export default function Chatbot() {
               <div>
                 <h3 className="font-semibold">Trợ lý Tài chính AI</h3>
                 <p className="text-xs text-white/80 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  Luôn sẵn sàng hỗ trợ bạn
+                  <Cpu className="w-3 h-3" />
+                  Powered by Dify AI
                 </p>
               </div>
             </div>
@@ -160,6 +186,11 @@ export default function Chatbot() {
                     <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
                       <Bot className="w-4 h-4 text-primary-500" />
                       <span className="text-xs font-medium text-primary-500">AI Assistant</span>
+                      {msg.isDify && (
+                        <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-600 rounded-full font-medium">
+                          Dify
+                        </span>
+                      )}
                     </div>
                   )}
                   <div className="text-sm whitespace-pre-wrap">

@@ -231,3 +231,78 @@ async def get_demo_questions():
             "Total income this year"
         ]
     }
+
+
+@router.get("/openapi.json")
+async def get_openapi_schema():
+    """
+    Returns OpenAPI schema for Dify integration.
+    Use this URL to import tool in Dify Cloud.
+    """
+    return {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "Finance Chatbot API",
+            "version": "1.0.0",
+            "description": "API for personal finance chatbot"
+        },
+        "servers": [
+            {
+                "url": "https://isa-untranslated-bernard.ngrok-free.dev"
+            }
+        ],
+        "paths": {
+            "/chatbot/query": {
+                "post": {
+                    "operationId": "queryFinance",
+                    "summary": "Query user finance data",
+                    "description": "Query financial data like expenses, income, budgets, wallet balance",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {
+                                            "type": "integer",
+                                            "description": "User ID"
+                                        },
+                                        "question": {
+                                            "type": "string",
+                                            "description": "Question about finance in Vietnamese"
+                                        },
+                                        "timezone": {
+                                            "type": "string",
+                                            "default": "Asia/Ho_Chi_Minh"
+                                        }
+                                    },
+                                    "required": ["user_id", "question"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Successful response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "answer": {"type": "string"},
+                                            "data": {"type": "object"},
+                                            "suggested_actions": {
+                                                "type": "array",
+                                                "items": {"type": "string"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
