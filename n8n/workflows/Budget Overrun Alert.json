@@ -1,0 +1,470 @@
+{
+  "name": "Budget Overrun Alert",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "edb994a6-e323-43c7-82ba-03f99d2b15a2",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "406c5e25-1717-4c8c-a16c-f4f950d53b3a",
+      "name": "Monthly Cron (1st of month at 8AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get current month in YYYY-MM format\nconst now = new Date();\nconst year = now.getFullYear();\nconst month = String(now.getMonth() + 1).padStart(2, '0');\nconst currentMonth = `${year}-${month}`;\n\nreturn [{ json: { month: currentMonth } }];"
+      },
+      "id": "a348697e-9162-44ba-8df7-586f3adbf708",
+      "name": "Get Current Month",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://backend:8000/api/automation/bills/upcoming?month={{ $json.month }}&service_key=n8n-service-key",
+        "options": {}
+      },
+      "id": "30e3df75-9f20-4dfc-ae2b-0c15a9151571",
+      "name": "Fetch Upcoming Bills",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Group bills by user email\nconst inputData = $input.first().json;\nconst bills = inputData.bills || [];\nconst month = inputData.month;\n\nif (bills.length === 0) {\n  return [];\n}\n\n// Group by user_email\nconst grouped = {};\nfor (const bill of bills) {\n  const email = bill.user_email;\n  if (!grouped[email]) {\n    grouped[email] = {\n      user_email: email,\n      user_name: bill.user_name,\n      month: month,\n      bills: [],\n      total_amount: 0\n    };\n  }\n  grouped[email].bills.push(bill);\n  grouped[email].total_amount += bill.amount;\n}\n\n// Convert to array\nreturn Object.values(grouped).map(g => ({ json: g }));"
+      },
+      "id": "c3e64c90-b787-4c63-92b2-094e6e11495d",
+      "name": "Group Bills by User",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build HTML email content for each user\nconst data = $input.item.json;\nconst bills = data.bills;\nconst month = data.month;\nconst totalAmount = data.total_amount;\n\n// Format currency\nconst formatCurrency = (amount, currency = 'VND') => {\n  return new Intl.NumberFormat('vi-VN', { \n    style: 'currency', \n    currency: currency \n  }).format(amount);\n};\n\n// Build bills table\nlet billRows = '';\nfor (const bill of bills) {\n  billRows += `\n    <tr>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">${bill.bill_name}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">${bill.category_name}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">${bill.due_date}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">${bill.wallet_name}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;\">\n        ${formatCurrency(bill.amount, bill.currency)}\n      </td>\n    </tr>`;\n}\n\nconst htmlContent = `\n<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; }\n    .content { background: #fff; padding: 30px; border: 1px solid #eee; }\n    .footer { background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; }\n    table { width: 100%; border-collapse: collapse; margin: 20px 0; }\n    th { background: #f8f9fa; padding: 12px; text-align: left; }\n    .total { background: #667eea; color: white; padding: 15px; border-radius: 5px; text-align: center; margin-top: 20px; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1 style=\"margin: 0;\">📋 Monthly Bill Reminder</h1>\n      <p style=\"margin: 10px 0 0 0; opacity: 0.9;\">Period: ${month}</p>\n    </div>\n    <div class=\"content\">\n      <p>Hello <strong>${data.user_name}</strong>,</p>\n      <p>Here are your upcoming bills for <strong>${month}</strong>:</p>\n      \n      <table>\n        <thead>\n          <tr>\n            <th>Bill Name</th>\n            <th>Category</th>\n            <th>Due Date</th>\n            <th>Wallet</th>\n            <th style=\"text-align: right;\">Amount</th>\n          </tr>\n        </thead>\n        <tbody>\n          ${billRows}\n        </tbody>\n      </table>\n      \n      <div class=\"total\">\n        <h2 style=\"margin: 0;\">Total: ${formatCurrency(totalAmount)}</h2>\n      </div>\n      \n      <p style=\"margin-top: 30px;\">Please ensure you have sufficient funds in your wallets to cover these bills.</p>\n    </div>\n    <div class=\"footer\">\n      <p style=\"margin: 0; color: #666;\">Personal Finance BI System</p>\n      <p style=\"margin: 5px 0 0 0; font-size: 12px; color: #999;\">This is an automated reminder email.</p>\n    </div>\n  </div>\n</body>\n</html>\n`;\n\nreturn [{\n  json: {\n    to: data.user_email,\n    subject: `📋 Bill Reminder for ${month} - Total: ${formatCurrency(totalAmount)}`,\n    html: htmlContent,\n    user_name: data.user_name,\n    bill_count: bills.length,\n    total_amount: totalAmount\n  }\n}];"
+      },
+      "id": "32423165-7c12-484c-9b32-139033b8ade4",
+      "name": "Build Email Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@finance.app",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "38b47f21-4767-47c3-826d-5f78c37a491c",
+      "name": "Send Email via MailHog",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1200,
+        112
+      ],
+      "webhookId": "79c1845f-3552-480b-b093-041647e8ab5e",
+      "credentials": {
+        "smtp": {
+          "id": "9I4dLwyB31xsOE03",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-check-bills",
+              "leftValue": "={{ $json.total_bills }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6d662685-515e-4478-ac4e-f8124ce6338b",
+      "name": "Check Bills Exist",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        304
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "da867c73-6837-4234-b80a-9dca5b2a719d",
+      "name": "No Bills - Skip",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        720,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "8aa94f27-c482-4044-9c15-d8c7094bb7af",
+      "name": "Daily Cron (9AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        816,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    bva.user_id,\n    u.email AS user_email,\n    u.full_name AS user_name,\n    bva.year,\n    bva.month,\n    TO_CHAR(MAKE_DATE(bva.year, bva.month, 1), 'YYYY-MM') AS period,\n    bva.category_id,\n    bva.category_name,\n    bva.category_color,\n    bva.budget_amount,\n    bva.actual_spent,\n    bva.actual_spent - bva.budget_amount AS overrun_amount,\n    bva.usage_percentage,\n    bva.status\nFROM v_budget_vs_actual bva\nJOIN users u ON bva.user_id = u.id\nWHERE bva.year = EXTRACT(YEAR FROM CURRENT_DATE)::INTEGER\n  AND bva.month = EXTRACT(MONTH FROM CURRENT_DATE)::INTEGER\n  AND bva.actual_spent > bva.budget_amount\nORDER BY bva.user_id, bva.actual_spent - bva.budget_amount DESC;",
+        "options": {}
+      },
+      "id": "8aa40c6f-412a-4942-9dad-3bbca3816879",
+      "name": "Query Budget Overruns",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1056,
+        928
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "O5wBI74SuzHPHVvV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-has-items",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7707ef2f-2b19-423b-bb56-18cf7da6744e",
+      "name": "Check Overruns Exist",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1296,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Group overruns by user email\nconst items = $input.all();\n\nif (items.length === 0) {\n  return [];\n}\n\n// Group by user_email\nconst grouped = {};\nfor (const item of items) {\n  const data = item.json;\n  const email = data.user_email;\n  if (!grouped[email]) {\n    grouped[email] = {\n      user_email: email,\n      user_name: data.user_name,\n      period: data.period,\n      overruns: [],\n      total_overrun: 0\n    };\n  }\n  grouped[email].overruns.push({\n    category_name: data.category_name,\n    category_color: data.category_color,\n    budget_amount: parseFloat(data.budget_amount),\n    actual_spent: parseFloat(data.actual_spent),\n    overrun_amount: parseFloat(data.overrun_amount),\n    usage_percentage: parseFloat(data.usage_percentage || 0)\n  });\n  grouped[email].total_overrun += parseFloat(data.overrun_amount);\n}\n\n// Convert to array\nreturn Object.values(grouped).map(g => ({ json: g }));"
+      },
+      "id": "3b884270-4cf4-47cb-af0f-3e86d4185839",
+      "name": "Group by User",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1536,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build HTML email content for budget overrun alert\nconst data = $input.item.json;\nconst overruns = data.overruns;\nconst period = data.period;\nconst totalOverrun = data.total_overrun;\n\n// Format currency\nconst formatCurrency = (amount) => {\n  return new Intl.NumberFormat('vi-VN', { \n    style: 'currency', \n    currency: 'VND' \n  }).format(amount);\n};\n\n// Build overruns table\nlet overrunRows = '';\nfor (const o of overruns) {\n  const progressWidth = Math.min(o.usage_percentage, 150);\n  overrunRows += `\n    <tr>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">\n        <span style=\"display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${o.category_color}; margin-right: 8px;\"></span>\n        ${o.category_name}\n      </td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee; text-align: right;\">${formatCurrency(o.budget_amount)}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee; text-align: right; color: #dc2626; font-weight: bold;\">${formatCurrency(o.actual_spent)}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee; text-align: right; color: #dc2626; font-weight: bold;\">+${formatCurrency(o.overrun_amount)}</td>\n      <td style=\"padding: 12px; border-bottom: 1px solid #eee;\">\n        <div style=\"background: #fee2e2; border-radius: 10px; height: 20px; position: relative; overflow: hidden;\">\n          <div style=\"background: #dc2626; height: 100%; width: ${progressWidth}%; border-radius: 10px;\"></div>\n          <span style=\"position: absolute; right: 8px; top: 2px; font-size: 11px; font-weight: bold;\">${o.usage_percentage.toFixed(0)}%</span>\n        </div>\n      </td>\n    </tr>`;\n}\n\nconst htmlContent = `\n<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 700px; margin: 0 auto; padding: 20px; }\n    .header { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; }\n    .content { background: #fff; padding: 30px; border: 1px solid #eee; }\n    .footer { background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; }\n    table { width: 100%; border-collapse: collapse; margin: 20px 0; }\n    th { background: #fef2f2; padding: 12px; text-align: left; color: #dc2626; }\n    .alert-box { background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0; border-radius: 0 5px 5px 0; }\n    .total { background: #dc2626; color: white; padding: 15px; border-radius: 5px; text-align: center; margin-top: 20px; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1 style=\"margin: 0;\">⚠️ Budget Overrun Alert</h1>\n      <p style=\"margin: 10px 0 0 0; opacity: 0.9;\">Period: ${period}</p>\n    </div>\n    <div class=\"content\">\n      <p>Hello <strong>${data.user_name}</strong>,</p>\n      \n      <div class=\"alert-box\">\n        <strong>⚠️ Warning:</strong> You have exceeded your budget in ${overruns.length} categor${overruns.length > 1 ? 'ies' : 'y'} this month.\n      </div>\n      \n      <p>Here are the details of your budget overruns for <strong>${period}</strong>:</p>\n      \n      <table>\n        <thead>\n          <tr>\n            <th>Category</th>\n            <th style=\"text-align: right;\">Budget</th>\n            <th style=\"text-align: right;\">Spent</th>\n            <th style=\"text-align: right;\">Overrun</th>\n            <th>Usage</th>\n          </tr>\n        </thead>\n        <tbody>\n          ${overrunRows}\n        </tbody>\n      </table>\n      \n      <div class=\"total\">\n        <h2 style=\"margin: 0;\">Total Overrun: +${formatCurrency(totalOverrun)}</h2>\n      </div>\n      \n      <p style=\"margin-top: 30px;\"><strong>Recommendations:</strong></p>\n      <ul>\n        <li>Review your spending in the overrun categories</li>\n        <li>Consider adjusting your budget for next month</li>\n        <li>Look for areas where you can cut back</li>\n      </ul>\n    </div>\n    <div class=\"footer\">\n      <p style=\"margin: 0; color: #666;\">Personal Finance BI System</p>\n      <p style=\"margin: 5px 0 0 0; font-size: 12px; color: #999;\">This is an automated alert email.</p>\n    </div>\n  </div>\n</body>\n</html>\n`;\n\nreturn [{\n  json: {\n    to: data.user_email,\n    subject: `⚠️ Budget Alert: ${overruns.length} categor${overruns.length > 1 ? 'ies' : 'y'} over budget for ${period}`,\n    html: htmlContent,\n    user_name: data.user_name,\n    overrun_count: overruns.length,\n    total_overrun: totalOverrun\n  }\n}];"
+      },
+      "id": "115a5c28-29c3-45c5-9e2a-9cf4221b883b",
+      "name": "Build Alert Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1776,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "alerts@finance.app",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "e73078dc-9337-43d9-9f95-4c8b35d23a84",
+      "name": "Send Alert via MailHog",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2016,
+        928
+      ],
+      "webhookId": "0d126da7-4f32-4d9f-a50f-97f5c379e022",
+      "credentials": {
+        "smtp": {
+          "id": "9I4dLwyB31xsOE03",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "5b1fd945-9811-4aea-8d5c-3b54beaca20e",
+      "name": "No Overruns - Skip",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        1120
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Current Month",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monthly Cron (1st of month at 8AM)": {
+      "main": [
+        [
+          {
+            "node": "Get Current Month",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Current Month": {
+      "main": [
+        [
+          {
+            "node": "Fetch Upcoming Bills",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Upcoming Bills": {
+      "main": [
+        [
+          {
+            "node": "Check Bills Exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Bills Exist": {
+      "main": [
+        [
+          {
+            "node": "Group Bills by User",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Bills - Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group Bills by User": {
+      "main": [
+        [
+          {
+            "node": "Build Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Email Content": {
+      "main": [
+        [
+          {
+            "node": "Send Email via MailHog",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Cron (9AM)": {
+      "main": [
+        [
+          {
+            "node": "Query Budget Overruns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Budget Overruns": {
+      "main": [
+        [
+          {
+            "node": "Check Overruns Exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Overruns Exist": {
+      "main": [
+        [
+          {
+            "node": "Group by User",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Overruns - Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group by User": {
+      "main": [
+        [
+          {
+            "node": "Build Alert Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Alert Email": {
+      "main": [
+        [
+          {
+            "node": "Send Alert via MailHog",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "e9c0b3a0-f26e-4a80-af0c-7083d3e31b4f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "640a6fb3c65cec2fab2fcf79ea19a2dfe233317284e2dc269e8960c57aa7ad60"
+  },
+  "id": "IDDTWgfhPFS-GL5eoOIh2",
+  "tags": [
+    {
+      "updatedAt": "2026-01-09T08:00:51.184Z",
+      "createdAt": "2026-01-09T08:00:51.184Z",
+      "id": "Xxt1ybYgyzz4w9mn",
+      "name": "finance"
+    },
+    {
+      "updatedAt": "2026-01-09T08:00:51.145Z",
+      "createdAt": "2026-01-09T08:00:51.145Z",
+      "id": "ZwiKPj8Yya53UYRU",
+      "name": "automation"
+    },
+    {
+      "updatedAt": "2026-01-09T08:01:01.524Z",
+      "createdAt": "2026-01-09T08:01:01.524Z",
+      "id": "zTFkW5avIk0UNleM",
+      "name": "alerts"
+    }
+  ]
+}

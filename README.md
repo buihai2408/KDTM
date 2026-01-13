@@ -187,9 +187,9 @@ personal-finance-bi/
 │   Frontend      │ ──────────────►│   Dify Cloud    │
 │   (React)       │   Dify API     │   (AI Model)    │
 └─────────────────┘                └────────┬────────┘
-                                           │
-                                           │ HTTP Tool
-                                           ▼
+                                            │
+                                            │  HTTP Tool
+                                            ▼
 ┌─────────────────┐                ┌─────────────────┐
 │   PostgreSQL    │ ◄──────────────│   Backend       │
 │   (Database)    │                │   (FastAPI)     │

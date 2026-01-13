@@ -75,6 +75,8 @@ HTTP_HEADERS = {
     'X-Frame-Options': 'ALLOWALL',
 }
 
+TALISMAN_ENABLED = False
+
 # Enable public dashboards
 PUBLIC_ROLE_LIKE = "Gamma"
 
