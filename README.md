@@ -83,7 +83,7 @@ docker-compose up --build
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| **Frontend** | http://localhost:5173 | Đăng ký hoặc dùng tài khoản demo |
+| **Frontend** | http://localhost:3000 | Đăng ký hoặc dùng tài khoản demo |
 | **Backend API** | http://localhost:8000/docs | - |
 | **Superset** | http://localhost:8088 | admin / admin |
 | **n8n** | http://localhost:5678 | admin / admin |
