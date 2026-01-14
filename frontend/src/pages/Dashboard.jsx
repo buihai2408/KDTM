@@ -19,6 +19,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Legend,
 } from 'recharts';
 
 function formatCurrency(amount) {
@@ -29,30 +30,59 @@ function formatCurrency(amount) {
   }).format(amount);
 }
 
+// function StatCard({ title, value, icon: Icon, trend, trendValue, color }) {
+//   return (
+//     <div className="card">
+//       <div className="flex items-start justify-between">
+//         <div>
+//           <p className="text-sm text-slate-600 mb-1">{title}</p>
+//           <p className="text-2xl font-bold text-slate-900">{value}</p>
+//           {trend && (
+//             <p
+//               className={`text-sm mt-2 flex items-center gap-1 ${
+//                 trend === 'up' ? 'text-green-600' : 'text-red-600'
+//               }`}
+//             >
+//               {trend === 'up' ? (
+//                 <ArrowUpRight className="w-4 h-4" />
+//               ) : (
+//                 <ArrowDownRight className="w-4 h-4" />
+//               )}
+//               {trendValue}
+//             </p>
+//           )}
+//         </div>
+//         <div className={`p-3 rounded-lg ${color}`}>
+//           <Icon className="w-6 h-6 text-white" />
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
 function StatCard({ title, value, icon: Icon, trend, trendValue, color }) {
   return (
     <div className="card">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-slate-600 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-slate-900">{value}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1">
+          <p className="text-sm text-slate-500 font-medium mb-1">{title}</p>
+          <p className="text-xl font-bold text-slate-900">{value}</p>
           {trend && (
             <p
-              className={`text-sm mt-2 flex items-center gap-1 ${
+              className={`text-sm mt-2 flex items-center gap-1 font-medium ${
                 trend === 'up' ? 'text-green-600' : 'text-red-600'
               }`}
             >
               {trend === 'up' ? (
-                <ArrowUpRight className="w-4 h-4" />
+                <ArrowUpRight className="w-4 h-4 flex-shrink-0" />
               ) : (
-                <ArrowDownRight className="w-4 h-4" />
+                <ArrowDownRight className="w-4 h-4 flex-shrink-0" />
               )}
-              {trendValue}
+              <span className="whitespace-nowrap">{trendValue}</span>
             </p>
           )}
         </div>
-        <div className={`p-3 rounded-lg ${color}`}>
-          <Icon className="w-6 h-6 text-white" />
+        <div className={`w-11 h-11 rounded-xl ${color} flex items-center justify-center shadow-sm flex-shrink-0`}>
+          <Icon className="w-5 h-5 text-white" />
         </div>
       </div>
     </div>
@@ -96,6 +126,21 @@ export default function Dashboard() {
     }
   };
 
+  // --- XỬ LÝ DỮ LIỆU ---
+  
+  // 1. Ép kiểu cho Biểu đồ tròn
+  const pieChartData = categoryData.map(item => ({
+    ...item,
+    total_amount: Number(item.total_amount)
+  }));
+
+  // 2. Ép kiểu cho Biểu đồ cột
+  const formattedMonthlyData = monthlyData.map(item => ({
+    ...item,
+    total_income: Number(item.total_income),
+    total_expense: Number(item.total_expense)
+  }));
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -110,7 +155,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-slate-900">Tổng quan</h1>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - Sử dụng StatCard mới */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Tổng số dư"
@@ -142,6 +187,7 @@ export default function Dashboard() {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
         {/* Monthly Trend */}
         <div className="card">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">
@@ -149,23 +195,48 @@ export default function Dashboard() {
           </h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <BarChart
+                data={formattedMonthlyData} // <--- Dùng dữ liệu đã ép kiểu số
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                barGap={8}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <XAxis
                   dataKey="month"
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 12, fill: '#64748b' }}
                   tickFormatter={(m) => MONTH_NAMES_VI[m - 1]}
+                  axisLine={false}
+                  tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 12, fill: '#64748b' }}
                   tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`}
+                  axisLine={false}
+                  tickLine={false}
+                  width={40}
                 />
                 <Tooltip
+                  cursor={{ fill: '#f1f5f9' }}
                   formatter={(value) => formatCurrency(value)}
                   labelFormatter={(m) => `Tháng ${m}`}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
-                <Bar dataKey="total_income" name="Thu nhập" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="total_expense" name="Chi tiêu" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                <Legend iconType="circle" wrapperStyle={{ paddingTop: '10px' }} />
+                
+                <Bar 
+                  dataKey="total_income" 
+                  name="Thu nhập" 
+                  fill="#22c55e" 
+                  radius={[4, 4, 0, 0]} 
+                  barSize={12} // Giảm kích thước cột một chút cho thanh thoát
+                />
+                <Bar 
+                  dataKey="total_expense" 
+                  name="Chi tiêu" 
+                  fill="#ef4444" 
+                  radius={[4, 4, 0, 0]} 
+                  barSize={12} 
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -176,49 +247,66 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold text-slate-900 mb-4">
             Chi tiêu theo danh mục
           </h2>
-          <div className="h-64 flex items-center">
-            {categoryData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    dataKey="total_amount"
-                    nameKey="category_name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell
-                        key={entry.category_id}
-                        fill={entry.category_color || COLORS[index % COLORS.length]}
+          <div className="h-64">
+            {pieChartData.length > 0 ? (
+              <div className="flex items-center h-full">
+                {/* Biểu đồ tròn - bên trái */}
+                <div className="flex-1 h-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieChartData}
+                        dataKey="total_amount"
+                        nameKey="category_name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={90}
+                        paddingAngle={3}
+                      >
+                        {pieChartData.map((entry, index) => (
+                          <Cell
+                            key={entry.category_id}
+                            fill={entry.category_color || COLORS[index % COLORS.length]}
+                            strokeWidth={0}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => formatCurrency(value)} 
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => formatCurrency(value)} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-slate-500 text-center w-full">
-                Chưa có dữ liệu chi tiêu tháng này
-              </p>
-            )}
-            <div className="space-y-2 ml-4">
-              {categoryData.slice(0, 5).map((cat, index) => (
-                <div key={cat.category_id} className="flex items-center gap-2 text-sm">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{
-                      backgroundColor: cat.category_color || COLORS[index % COLORS.length],
-                    }}
-                  />
-                  <span className="text-slate-600">{cat.category_name}</span>
-                  <span className="text-slate-400">({cat.percentage}%)</span>
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
+                
+                {/* Chú thích - bên phải */}
+                <div className="w-48 space-y-3 pl-4">
+                  {pieChartData.slice(0, 5).map((cat, index) => (
+                    <div key={cat.category_id} className="flex items-start gap-2.5">
+                      <div
+                        className="w-3 h-3 rounded-full flex-shrink-0 mt-1"
+                        style={{
+                          backgroundColor: cat.category_color || COLORS[index % COLORS.length],
+                        }}
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">
+                          {cat.category_name}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {cat.percentage}% ({formatCurrency(cat.total_amount)})
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full text-slate-500 bg-slate-50 rounded-lg">
+                <p>Chưa có dữ liệu chi tiêu</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
